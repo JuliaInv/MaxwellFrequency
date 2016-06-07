@@ -25,7 +25,7 @@ rhs = randn(size(A,1)) + 1im*randn(size(A,1))
 @testset "Solver tests" begin
 
 # get solver types
-solvers  = ( getMUMPSsolver(),getIterativeSolver(:bicgstb))
+solvers  = ( getMUMPSsolver(),getIterativeSolver(bicgstb))
 solvers[2].maxIter=1000
 xi = []
 for s = solvers
