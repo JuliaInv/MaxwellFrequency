@@ -1,3 +1,17 @@
 # MaxwellFrequency
 
-[![Build Status](https://travis-ci.org/Pbellive/MaxwellFrequency.jl.svg?branch=master)](https://travis-ci.org/Pbellive/MaxwellFrequency.jl)
+Forward modelling and sensitivities for quasi-static, non-dispersive time domain electromagnetics. Grounded and inductive sources are allowed. Sources provided by discretized wire path passed to getEdgeIntegralOfPolygonalChain.
+
+# Installation
+
+From the julia prompt run
+```
+Pkg.clone("https://github.com/MaxwellUBC/MaxwellFrequency.git")
+```
+
+# Tests
+
+From the julia prompt run
+```
+Pkg.test("MaxwellFrequency")
+```
