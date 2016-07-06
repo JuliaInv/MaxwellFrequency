@@ -12,7 +12,7 @@ catch
 end
 
 omega = [0 12 0 4 0 3]
-n     = [32;32;16]
+n     = [24;24;16]
 Mr     = getRegularMesh(omega,n)
 
 # setup random sources
@@ -183,43 +183,3 @@ if hasJOcTree
 #   @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
 end
 end #End of mesh consistency test set
-
-warn("MaxwellFrequency: testMaxwellFwd: OcTree mesh FEM not currently tested")
-# # create corresponding OcTree mesh FEM
-# Mofem  = getOcTreeMeshFEM(S,h)
-# 
-# # call getData
-# paramofem        = getMaxwellFreqParam(Mofem,Sources,Obs,fields,freq,Ainv)
-# Dofem, paramofem = getData(m,paramofem)
-# RE3 = norm(Dofv-Dofem)/norm(Dofv)
-# @test RE3 < 1e-2
-# 
-# #Test implicit sensitivities
-# println("Testing OcTree mesh FEM implicit sensitivities")
-# #Derivative test
-# f(x,v=[]) = testFun(x,paramofem,v)
-# checkDerivativeMaxwellOcTreeFEM,errorofem,orderofem = checkDerivative(f,m)
-# @test checkDerivativeMaxwellOcTreeFEM
-# 
-# # adjoint test
-# x = randn(length(m))
-# u = randn(size(Dofem))
-# v = getSensMatVec(x,m,paramofem)
-# w = getSensTMatVec(vec(u),m,paramofem)
-# @test norm(vec(u)'*vec(v) - w'*x)<1e-4
-# 
-# #Test explicit sensitivities
-# # #Test explicit sensitivities
-# println("Testing OcTree mesh FEM explicit sensitivities")
-# paramofemSE  = getMaxwellFreqParamSE(Mofem,Sources,Obs,freq,Ainv)
-# #Derivative test
-# f(x,v=[]) = testFunSE(x,paramofem,paramofemSE,v)
-# checkDerivativeMaxwellOcTreeFEMSE,errorofemSE,orderofemSE = checkDerivative(f,m)
-# @test checkDerivativeMaxwellOcTreeFEMSE
-# 
-# # adjoint test
-# x = randn(length(m))
-# u = randn(size(Dofem))
-# v = getSensMatVec(x,m,paramofemSE)
-# w = getSensTMatVec(vec(u),m,paramofemSE)
-# @test norm(vec(u)'*vec(v) - w'*x)<1e-4

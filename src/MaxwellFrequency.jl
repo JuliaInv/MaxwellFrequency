@@ -1,10 +1,18 @@
 module MaxwellFrequency
 
 using jInv.Mesh
-using JOcTree
 using jInv.Utils
 using jInv.LinearSolvers 
 using KrylovMethods
+using MaxwellUtils
+# hasJOcTree = false
+# try
+#   using JOcTree
+#   hasJOcTree = true
+# catch
+#   hasJOcTree = false
+# end
+
 
 import jInv.ForwardShare.getData
 import jInv.ForwardShare.getSensTMatVec

@@ -8,7 +8,6 @@ using jInv.InverseSolve
 # ------- SETUP PARAMETERS FOR THE MODEL AND DATA
 
 # data and topo files
-#datafile = ["data_inv.txt"]
 datafile = [ "data_inv.txt_data",
              "data_inv.txt_trx",
              "data_inv.txt_rcv",
@@ -17,11 +16,16 @@ datafile = [ "data_inv.txt_data",
 topofile = "topo.txt"
 
 # of cells in base mesh
-n     = vec([ 256  256 1024 ])
+#n     = vec([ 256  256 1024 ])
 # corner of the mesh
 x0    = vec([ 7.56912000E+05  4.15763700E+06  -7852.178 ])
+expFac = 1.25;
+nPadxy = 10;
+nPadz  =  12;
+h0     = [25;25;10];
+
 # total mesh lengths  
-meshL = vec([ 6400. 6400. 10240. ])
+#meshL = vec([ 6400. 6400. 10240. ])
 
 
 # parameters for meshing

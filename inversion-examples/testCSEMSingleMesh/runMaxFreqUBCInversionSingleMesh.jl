@@ -1,10 +1,3 @@
-# using JOcTree
-# using jInv.Utils
-# using jInv.LinearSolvers
-# using jInv.InverseSolve
-# using MaxwellUtils
-# using MaxwellFrequency
-
 #Load parameters
 include("parametersForInversion.jl")
 
@@ -83,20 +76,20 @@ end
 # ------- Read topography -----------
 
 # cell size
-h = meshL ./ n
-
-topogrid = readTopo( topofile, n, x0, h )
-
-t1 = minimum(topogrid)
-t2 = maximum(topogrid)
-
-if t1 < x0[3] || t2 > xn[3]
-   error("Topography outside of mesh.")
-end   
-
-# Figure out the number of surface cells for each point in
-# the x,y grid.
-itopo = getItopo(h,n,x0, topogrid)
+# h = meshL ./ n
+# 
+# topogrid = readTopo( topofile, n, x0, h )
+# 
+# t1 = minimum(topogrid)
+# t2 = maximum(topogrid)
+# 
+# if t1 < x0[3] || t2 > xn[3]
+#    error("Topography outside of mesh.")
+# end   
+# 
+# # Figure out the number of surface cells for each point in
+# # the x,y grid.
+# itopo = getItopo(h,n,x0, topogrid)
 
 # ------- Generate mesh --------------------------------------------------
 
@@ -105,43 +98,59 @@ tic()
 
 z1 = min(t1, z1)
 z2 = max(t2, z2)
-nf = 2
-nc = 2
+# nf = 2
+# nc = 2
 
-S = createOcTreeFromBox(
-	x0[1], x0[2], x0[3],
-	n[1], n[2], n[3],
-	h[1], h[2], h[3],
-	x1, x2, y1, y2, z1, z2,
-	nf, nc)
-if doFV
-	M = getOcTreeMeshFV(S, h; x0 = x0)
-else
-	M = getOcTreeMeshFEM(S, h; x0 = x0)
-end
+# S = createOcTreeFromBox(
+# 	x0[1], x0[2], x0[3],
+# 	n[1], n[2], n[3],
+# 	h[1], h[2], h[3],
+# 	x1, x2, y1, y2, z1, z2,
+# 	nf, nc)
+# if doFV
+# 	M = getOcTreeMeshFV(S, h; x0 = x0)
+# else
+# 	M = getOcTreeMeshFEM(S, h; x0 = x0)
+# end
+h1    = [x1-h0[1]*(expFac.^collect(nPadxy:-1:1))
+         collect(x1:h0[1]:x2)
+         x2+h0[1]*(expFac.^collect(1:nPadxy))
+
+h2    = [y1-h0[2]*(expFac.^collect(nPadxy:-1:1))
+         collect(y1:h0[2]:y2)
+         y2+h0[2]*(expFac.^collect(1:nPadxy))
+
+h1    = [z1-h0[3]*(expFac.^collect(nPadz:-1:1))
+         collect(z1:h0[3]:z2)
+         z2+h0[3]*(expFac.^collect(1:nPadz))
+
+M = getTensorMesh3D(h1,h2,h3,x0)
 
 toc()
 
 display(M)
 
-exportOcTreeMeshRoman("mesh.txt",M)
+# exportOcTreeMeshRoman("mesh.txt",M)
+# 
+# # ----- Generate initial model -------------------------------------------
+# 
+# println("Generating initial model")
+# tic()
+# 
+# sigma, sigmaBck, isactive = getInitialmodel(M, itopo, halfSpaceCond, backCond)
+# 
+# Iact    = speye(Bool,M.nc)
+# Iact    = Iact[:,find(isactive)]
+# IactBck = speye(Bool,M.nc)
+# IactBck = IactBck[:,find(!isactive)]
+# 
 
-# ----- Generate initial model -------------------------------------------
+#Mean elevation of topo is -1041.79
 
-println("Generating initial model")
-tic()
-
-sigma, sigmaBck, isactive = getInitialmodel(M, itopo, halfSpaceCond, backCond)
-
-Iact    = speye(Bool,M.nc)
-Iact    = Iact[:,find(isactive)]
-IactBck = speye(Bool,M.nc)
-IactBck = IactBck[:,find(!isactive)]
-
-sigmaBackground = IactBck * sigmaBck
-
-toc()
-
+# sigmaBackground = IactBck * sigmaBck
+# 
+# toc()
+# 
 #------------ Set up forward problem -------------------------------------
 
 println("Setting up forward problem")
