@@ -30,6 +30,7 @@ function getSensMatVec(x::Vector,
 	return vec(matv)
 end # function getSensMatVec for FV OcTreeMesh
 
+if hasJOcTree
 function getSensMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParam{OcTreeMeshFEM})
     # Sens Mat Vec for FEM disctretization on OcTreeMesh
 	mu   = 4*pi*1e-7
@@ -53,6 +54,7 @@ function getSensMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParam{OcTreeMes
 		matv[:,i] = -P'*z	
 	end
 	return matv
+end
 end
 
 function getSensMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParamSE)

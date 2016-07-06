@@ -1,4 +1,3 @@
-
 # get inversion parameters
 include("parametersForInversion.jl")
 
@@ -44,7 +43,7 @@ sigmaBackground = IactBck * sigmaBck
 ############################### Setup to remote forward and misfit param  ######################################
 
 #------------ Preparing forward mesh -------------------------------------
-println("Generating small meshes in parallel")
+println("Generating small forward modelling meshes in parallel")
 tic()
 
 #getMUMPSsolver(Ainv=[],doClear=1,ooc=0,sym=0)

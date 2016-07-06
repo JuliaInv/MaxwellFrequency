@@ -1,10 +1,3 @@
-# using JOcTree
-# using jInv.Utils
-# using jInv.LinearSolvers
-# using jInv.InverseSolve
-# using MaxwellUtils
-# using MaxwellFrequency
-
 #Load parameters
 include("parametersForInversion.jl")
 
@@ -200,15 +193,6 @@ pMisRF = getMisfitParam(pFor, Wd, Dobs, misfun,Iact,sigmaBackground)
 
 
 if regfun == wdiffusionReg
-#   surfweight =
-#      try
-#         surfweight
-#      catch
-#         [1.0]  # default value
-#      end
-
-   
-
    if !isdefined(:surfweight)
       surfweight = [1.0]
    end

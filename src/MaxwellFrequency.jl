@@ -1,10 +1,15 @@
 module MaxwellFrequency
 
 using jInv.Mesh
-using JOcTree
 using jInv.Utils
 using jInv.LinearSolvers 
 using KrylovMethods
+hasJOcTree = false
+try
+  using JOcTree
+  hasJOcTree = true
+catch
+end
 
 import jInv.ForwardShare.getData
 import jInv.ForwardShare.getSensTMatVec
@@ -50,6 +55,7 @@ include("getData.jl")
 include("getSensMatVec.jl")
 include("getSensTMatVec.jl")
 include("solveMaxFreq.jl")
-#include("getOTMeshFromTxRx.jl")
-
+if hasJOcTree
+  include("getOTMeshFromTxRx.jl")
+end
 end  # module MaxwellFrequency

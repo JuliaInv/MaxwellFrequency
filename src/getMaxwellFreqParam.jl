@@ -22,6 +22,7 @@ function getMaxwellFreqParamSE(M::AbstractMesh, Sources, Obs, freq, linSolParam:
     return MaxwellFreqParamSE(M, Sources, Obs, freq, linSolParam, Sens, fname)
 end
 
+if hasJOcTree
 
 #---------------------------------------------------------------------------------------------------
 # prepare the param from "scratch"
@@ -287,3 +288,4 @@ end
 
 #----------------------------------------------------------------
 
+end

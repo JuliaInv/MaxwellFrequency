@@ -65,6 +65,7 @@ function getSensTMatVec(x::SparseMatrixCSC,sigma::Vector,param::MaxwellFreqParam
 	return matv
 end
 
+if hasJOcTree
 function getSensTMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParam{OcTreeMeshFEM})
 	# SensT Mat Vec for FV disctretization on OcTree mesh
 	
@@ -91,6 +92,7 @@ function getSensTMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParam{OcTreeMe
 	end
 	
 	return matv
+end
 end
 
 function getSensTMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParamSE)

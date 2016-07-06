@@ -41,7 +41,7 @@ function getData(sigma,   # conductivity
 	return D, param # data, MaxwellParam
 end # function getData
 
-
+if hasJOcTree
 function getData(sigma,  # conductivity
 	              param::MaxwellFreqParam{OcTreeMeshFEM},
 	              doClear::Bool=false)
@@ -75,7 +75,7 @@ function getData(sigma,  # conductivity
 	
 	return D, param  # data, MaxwellParam
 end # function getData
-
+end
 
 
 function getData(sigma::Array{Float64,1},param::MaxwellFreqParamSE,doClear::Bool=false)
