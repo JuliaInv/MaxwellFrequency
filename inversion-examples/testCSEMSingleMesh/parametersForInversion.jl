@@ -1,9 +1,8 @@
-using JOcTree
-#using jInv.Utils
 using MaxwellUtils
 using MaxwellFrequency
 using jInv.LinearSolvers
 using jInv.InverseSolve
+using jInv.Mesh
 
 # ------- SETUP PARAMETERS FOR THE MODEL AND DATA
 
@@ -18,14 +17,14 @@ topofile = "topo.txt"
 # of cells in base mesh
 #n     = vec([ 256  256 1024 ])
 # corner of the mesh
-x0    = vec([ 7.56912000E+05  4.15763700E+06  -7852.178 ])
+#x0    = vec([ 7.56912000E+05  4.15763700E+06  -7852.178 ])
 expFac = 1.25;
 nPadxy = 10;
 nPadz  =  12;
 h0     = [25;25;10];
 
 # total mesh lengths  
-#meshL = vec([ 6400. 6400. 10240. ])
+meshL = vec([ 6400. 6400. 10240. ])
 
 
 # parameters for meshing
