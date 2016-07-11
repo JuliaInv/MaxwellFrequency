@@ -6,7 +6,7 @@ Forward modelling and sensitivities for quasi-static, non-dispersive time domain
 
 From the julia prompt run
 ```
-Pkg.clone("https://github.com/MaxwellUBC/MaxwellFrequency.git")
+Pkg.clone("https://github.com/JuliaInv/MaxwellFrequency.git")
 ```
 
 # Tests
