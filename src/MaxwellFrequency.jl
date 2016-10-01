@@ -34,8 +34,10 @@ end  # type MaxwellParam
 
 Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.freq, P.Ainv, P.fname)
 
-#Dummy edge constraints function for non-Octree meshes
-getEdgeConstraints(M::AbstractMesh) = 1.0
+# Dummy nodal, edge and face constraints function for non-Octree meshes
+# getNodalConstraints(M::AbstractMesh) = (speye(M.nn),speye(M.nn))
+getEdgeConstraints(M::AbstractMesh) = (speye(sum(M.ne)),speye(sum(M.ne)))
+getFaceConstraints(M::AbstractMesh) = (speye(sum(M.nf)),speye(sum(M.nf)))
 
 export MaxwellFreqParamSE
 type MaxwellFreqParamSE{T} <: ForwardProbType

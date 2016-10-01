@@ -18,21 +18,27 @@ function getData(sigma,   # conductivity
 	
 	Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
 	Mmu  = getFaceMassMatrix(param.Mesh,fill(1/mu,length(sigma)))
+  
+  # eliminate hanging edges and faces
+	Ne,   = getEdgeConstraints(param.Mesh)
+  Nf,Qf = getFaceConstraints(param.Mesh)
+  
+  Curl = Qf  * Curl * Ne
+  Msig = Ne' * Msig * Ne
+  Mmu  = Nf' * Mmu  * Nf
 
-	# get the null space matrix
-	N  = getEdgeConstraints(param.Mesh)   
-	A  = N'*(Curl'*Mmu*Curl - im*w*Msig)*N
+	A   = Curl' * Mmu * Curl - (im * w) * Msig
+	rhs = (im * w) * full(Ne' * S)
 	
 	param.Ainv.doClear = 1
-	rhs = im*w*full(N'*S)
 	U, param.Ainv = solveMaxFreq(A, rhs, Msig,
 	                             param.Mesh, w, param.Ainv,0)
-
 	param.Ainv.doClear = 0
-	U = N*U
-	D = P'*U
+  
+	U = Ne * U
+	D = P' * U
 	
-	param.Fields =U
+	param.Fields = U
 	if doClear
 		# clear fields and factorization
 		clear!(param,clearAll=doClearAll)
@@ -56,7 +62,7 @@ function getData(sigma,  # conductivity
 	K,M,Msig = getMatricesFEM(param.Mesh,sigma)
 	
 	# get the null space matrix
-	N  = getEdgeConstraints(param.Mesh)   
+	N, = getEdgeConstraints(param.Mesh)   
 	A  = N'*(K/mu - im*w*Msig)*N
 	
 	param.Ainv.doClear = 1
