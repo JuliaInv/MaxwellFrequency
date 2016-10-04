@@ -28,7 +28,7 @@ function getData(sigma,   # conductivity
   Mmu  = Nf' * Mmu  * Nf
 
 	A   = Curl' * Mmu * Curl - (im * w) * Msig
-	rhs = (im * w) * full(Ne' * S)
+	rhs = (im * w) * (Ne' * S)
 	
 	param.Ainv.doClear = 1
 	U, param.Ainv = solveMaxFreq(A, rhs, Msig,

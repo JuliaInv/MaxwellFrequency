@@ -49,9 +49,8 @@ function solveMaxFreq(A, rhs, Msig,
 
 #
 
-sym = 2 # structurally symmetric
+linSolParam.sym = 2 # structurally symmetric
 en, = solveLinearSystem(A,rhs,linSolParam,flag)
-#en, = solveLinearSystem(A,rhs,linSolParam,sym,flag)
 
 return en, linSolParam
 end # function solveMaxFreq
