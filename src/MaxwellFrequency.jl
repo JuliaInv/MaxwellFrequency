@@ -35,6 +35,11 @@ end  # type MaxwellParam
 Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.freq, P.Ainv, P.fname)
 
 # Dummy nodal, edge and face constraints function for non-Octree meshes
+if hasJOcTree
+#  import JOcTree.getNodalConstraints
+  import JOcTree.getEdgeConstraints
+  import JOcTree.getFaceConstraints
+end
 # getNodalConstraints(M::AbstractMesh) = (speye(M.nn),speye(M.nn))
 getEdgeConstraints(M::AbstractMesh) = (speye(sum(M.ne)),speye(sum(M.ne)))
 getFaceConstraints(M::AbstractMesh) = (speye(sum(M.nf)),speye(sum(M.nf)))
