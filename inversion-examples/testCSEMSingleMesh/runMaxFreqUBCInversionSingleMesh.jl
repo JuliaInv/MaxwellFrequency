@@ -1,5 +1,6 @@
 #Load parameters
 include("parametersForInversion.jl")
+using jInv.Utils
 
 # ------- Read data ---------------------------------------
 
@@ -168,13 +169,17 @@ linSolParam = getMUMPSsolver([],1,0,2)
 
 # create forward solver for each frequency
 nFreqs = length(frq)
-pFor   = Array(RemoteRef{Channel{Any}},nFreqs)
+pFor   = Array(RemoteChannel,nFreqs)
+workerList = workers()
+nw         = length(workerList)
 for i = 1:nFreqs
   if doSE
-  	pFor[i] = @spawn getMaxwellFreqParamSE(M,Sources,Obs[i],fields,frq[i],linSolParam)
+  	pFor[i] = initRemoteChannel(getMaxwellFreqParamSE,workerList[i%nw+1],
+                                    M,Sources,Obs[i],fields,frq[i],linSolParam)
   else
   	fields = Array(Complex128, 0, 0)
-  	pFor[i] = @spawn getMaxwellFreqParam(M,Sources,Obs[i],fields,frq[i],linSolParam)
+  	pFor[i] = initRemoteChannel(getMaxwellFreqParam,workerList[i%nw+1],
+  	                            M,Sources,Obs[i],fields,frq[i],linSolParam)
   end
 end
 toc()

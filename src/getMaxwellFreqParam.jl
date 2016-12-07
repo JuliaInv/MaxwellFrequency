@@ -117,7 +117,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 	end
 	println("number of workers used $(length(workerList))")
 
-	pFor   = Array(RemoteRef,size(ProbSrcMap,1))
+	pFor  = Array(RemoteChannel,size(ProbSrcMap,1))
 	probs = zeros(maximum(workerList))
 
 	i = 1
@@ -146,7 +146,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 					if !all(iFreq.==iFreq[1])
 						error("pFor can only handle one frequency!")
 					end
-					pFor[idx]  = remotecall(p,getMaxwellFreqParam,x0,n,h,Srcs[[iSrc;]],Recs[[indRec;]],freq[iFreq[1]],nf,nc,Box,linSolParam,fname,doFV,doSE,ncells)
+					pFor[idx]  = initRemoteChannel(getMaxwellFreqParam,p,x0,n,h,Srcs[[iSrc;]],Recs[[indRec;]],freq[iFreq[1]],nf,nc,Box,linSolParam,fname,doFV,doSE,ncells)
 					wait(pFor[idx])
 					probs[p] +=1
 				end
