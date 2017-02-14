@@ -252,7 +252,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 							 doSE=true)
 
 
-	pFor   = Array(RemoteRef{Channel{Any}},length(TR))
+	pFor   = Array(RemoteChannel,length(TR))
 	i = 1; nextidx() = (idx=i; i+=1; idx)
 
 	nsrc  = length(TR)
@@ -266,8 +266,8 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 						break
 					end
 					# find src and rec on mesh
-					pFor[idx]  = remotecall(p,
-                                            getMaxwellFreqParam,
+					pFor[idx]  = initRemoteChannel(getMaxwellFreqParam,
+                                                                                    p,
 										    vec(x0),
 						   				    vec(n),
 											vec(h),
@@ -278,7 +278,6 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 											fname,
 											doFV,
 											doSE)
-					wait(pFor[idx])
 				end
 			end
 		end

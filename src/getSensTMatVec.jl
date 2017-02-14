@@ -68,7 +68,7 @@ function getSensTMatVec(x::SparseMatrixCSC,sigma::Vector,param::MaxwellFreqParam
 	for i=1:size(U,2)
 		if !all(X.==0)
 			
-			Z     = -Ne'*(P*squeeze(X[:,i,:],2))
+			Z     = -Ne'*(P*X[:,i,:])
 			Z,    = solveMaxFreq(A,Z,Msig,param.Mesh,w,param.Ainv,1)
 			u     = U[:,i] 
 			dAdm  = getdEdgeMassMatrix(param.Mesh,u)

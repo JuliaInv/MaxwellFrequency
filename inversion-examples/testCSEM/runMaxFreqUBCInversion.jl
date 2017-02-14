@@ -50,7 +50,7 @@ tic()
 #linSolParam = getMUMPSsolver([],1,0,2)
 linSolParam = getIterativeSolver(KrylovMethods.bicgstb)
   
-meshingParam = cell(5)
+meshingParam    = Array{Any}(5)
 meshingParam[1] = nsmallcells 
 meshingParam[2] = mincellsize
 meshingParam[3] = itopo
