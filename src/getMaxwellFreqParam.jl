@@ -73,13 +73,13 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
    # transmitters
 	s   = zeros(Complex128,sum(M.ne),length(Srcs))
 	for k=1:length(Srcs)
-		s[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Srcs[k],nEx,nEy,nEz,normalize=false))
+		s[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Srcs[k],normalize=false))
 	end
 
    # receivers
 	obs = spzeros(sum(M.ne),length(Recs))
 	for k=1:length(Recs)
-		obs[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Recs[k],nEx,nEy,nEz,normalize=true))
+		obs[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Recs[k],normalize=true))
 	end
 	if doSE
 		pFor = getMaxwellFreqParamSE(M,s,obs,freq,linSolParam,fname=fname)
@@ -205,13 +205,13 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
     # transmitters
     s = zeros(Complex128,sum(M.ne),length(Srcs))
     for k=1:length(Srcs)
-        s[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Srcs[k],nEx,nEy,nEz,normalize=false))
+        s[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Srcs[k],normalize=false))
     end
 
     # receivers
     Obs = spzeros(Complex128,sum(M.ne),length(Recs))
     for k=1:length(Recs)
-        tmp = getEdgeIntegralOfPolygonalChain(M,Recs[k],nEx,nEy,nEz,normalize=true)
+        tmp = getEdgeIntegralOfPolygonalChain(M,Recs[k],normalize=true)
         tmp = complex(tmp)
         Obs[:,k] = sparse(tmp)
         if norm(Recs[k][1,:] - Recs[k][end,:]) < 1e-16

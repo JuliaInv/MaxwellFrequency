@@ -42,15 +42,3 @@ function getOTMeshFromTxRx(x0::Array{Float64,1},
 
    return S
 end	
-	
-	# nEx,nEy,nEz = getEdgeNumbering(S)
-	#
-	#    # transmitters
-	# s   = zeros(Complex128,sum(M.ne),length(Srcs))
-	# for k=1:length(Srcs)
-	# 	s[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Srcs[k],nEx,nEy,nEz))
-	# end
-	#
-	#    # receivers
-	# obs = spzeros(sum(M.ne),length(Recs))
-										 
