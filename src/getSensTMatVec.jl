@@ -82,36 +82,6 @@ function getSensTMatVec(x::SparseMatrixCSC,sigma::Vector,param::MaxwellFreqParam
 	return matv
 end
 
-if hasJOcTree
-function getSensTMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParam{OcTreeMeshFEM})
-	# SensT Mat Vec for FV disctretization on OcTree mesh
-	
-	mu   = 4*pi*1e-7
-	U    = param.Fields
-	w    = param.freq
-	P    = param.Obs
-	
-	K,M,Msig = getMatricesFEM(param.Mesh,sigma)
-	N        = getEdgeConstraints(param.Mesh)   
-	A        = N'*(K/mu - 1im*w*Msig)*N
-	
-	X    = reshape(complex(x),size(P,2),size(U,2))
-	matv   = zeros(size(sigma))
-	
-	for i=1:size(U,2)
-		u     = U[:,i] 
-		dAdm  = getDiffMassMatrixFEM(param.Mesh,u)
-		dAdm  = -im*w*N'*dAdm
-		z     = -N'*(P*X[:,i])
-		z,    = solveMaxFreq(A,z,Msig,param.Mesh,w,param.Ainv,1)
-		z     = vec(z)
-		matv += real(dAdm'*z)
-	end
-	
-	return matv
-end
-end
-
 function getSensTMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParamSE)
 	if isempty(param.Sens)
 		warn("getSensTMatVec: Recomputing data to get sensitvity matrix. This should be avoided.")

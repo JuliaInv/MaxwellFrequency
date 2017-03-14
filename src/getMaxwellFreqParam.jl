@@ -61,12 +61,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 		end
 	end
 
-	if doFV
-		# finite volume discretization
-		M  = getOcTreeMeshFV(S,h;x0=x0)
-	else
-		M = getOcTreeMeshFEM(S,h;x0=x0)
-	end
+	M  = getOcTreeMeshFV(S,h;x0=x0)
 
 	nEx,nEy,nEz = getEdgeNumbering(S)
 
