@@ -146,13 +146,13 @@ nEx,nEy,nEz = getEdgeNumbering(S)
 # transmitters
 Sources = spzeros(Complex128, sum(M.ne), length(src))
 for i = 1:length(src)
-	Sources[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,src[i],nEx,nEy,nEz,normalize=false))
+	Sources[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,src[i],normalize=false))
 end
 
 # receivers
 Receivers = spzeros(Complex128, sum(M.ne), length(rcv))
 for i = 1:length(rcv)
-	Receivers[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,rcv[i],nEx,nEy,nEz,normalize=true))
+	Receivers[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,rcv[i],normalize=true))
 end
 # for closed loops, scale by i / (omega * mu0)
 Obs = typeof(Receivers)[copy(Receivers) for i = 1:length(frq)]
