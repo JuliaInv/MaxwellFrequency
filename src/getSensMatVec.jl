@@ -14,21 +14,30 @@ function getSensMatVec(x::Vector,
 	
 	Curl = getCurlMatrix(param.Mesh)
 	Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
-        Mmu  = getFaceMassMatrix(param.Mesh,fill(1/mu,length(sigma)))
-	N    = getEdgeConstraints(param.Mesh) 
+  Mmu  = getFaceMassMatrix(param.Mesh,fill(1/mu,length(sigma)))
+  
+  # eliminate hanging edges and faces
+	Ne,   = getEdgeConstraints(param.Mesh)
+  Nf,Qf = getFaceConstraints(param.Mesh)
+  
+  Curl = Qf  * Curl * Ne
+  Msig = Ne' * Msig * Ne
+  Mmu  = Nf' * Mmu  * Nf
+
+	A    = Curl' * Mmu * Curl - (im * w) * Msig
 	
 	matv = zeros(Complex128,size(P,2),size(U,2))
-	A    = N'*(Curl'*Mmu*Curl - im*w*Msig)*N
+
 	for i=1:size(U,2)
-		u       = U[:,i] 
+		u = U[:,i] 
 		dAdm    = getdEdgeMassMatrix(param.Mesh,u)
-		z       = -im*w*N'*dAdm*x
+		z       = -im*w*Ne'*dAdm*x
 		z,      = solveMaxFreq(A,z,Msig,param.Mesh,w,param.Ainv,0)
-		z       = vec(N*z)
+		z       = vec(Ne*z)
 		matv[:,i] = -P'*z	
 	end
 	return vec(matv)
-end # function getSensMatVec for FV
+end # function getSensMatVec for FV OcTreeMesh
 
 function getSensMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParamSE)
 	if isempty(param.Sens)

@@ -1,5 +1,6 @@
 #Load parameters
 include("parametersForInversion.jl")
+using jInv.Utils
 
 # ------- Read data ---------------------------------------
 
@@ -66,40 +67,7 @@ for i = 1:length(rcv)
 	z1 = min(z1, minimum(rcv[i][:,3]))
 	z2 = max(z2, maximum(rcv[i][:,3]))
 end
-
-# ------- Generate mesh --------------------------------------------------
-
-println("Generating mesh")
-
-# z1 = min(t1, z1)
-# z2 = max(t2, z2)
-z1 = -1041.79 - 150
-z2 = -1041.79 + 150
-
-ncore = round(Int64,[x2-x1;y2-y1;z2-z1]./h0)
-
-h1 = [h0[1]*(expFac.^collect(nPadxy:-1:1))
-      h0[1]*ones(ncore[1])
-      h0[1]*(expFac.^collect(1:nPadxy))]
-
-h2 = [h0[2]*(expFac.^collect(nPadxy:-1:1))
-      h0[2]*ones(ncore[2])
-      h0[2]*(expFac.^collect(1:nPadxy))]
-
-h3 = [h0[3]*(expFac.^collect(nPadz:-1:1))
-      h0[3]*ones(ncore[3])
-      h0[3]*(expFac.^collect(1:nPadz))]
-
-x0    = zeros(3)
-x0[1] = x1-sum(h1[1:nPadxy])
-x0[2] = y1-sum(h2[1:nPadxy])
-x0[3] = z1-sum(h3[1:nPadz])
-
-M = getTensorMesh3D(h1,h2,h3,x0)
-display(M)
-
-meshL = [sum(h1);sum(h2);sum(h3)]
-xn    = x0 + meshL  # opposite corner
+xn = x0 + meshL  # opposite corner
 if x1 < x0[1] || x2 > xn[1] ||
    y1 < x0[2] || y2 > xn[2] ||   
    z1 < x0[3] || z2 > xn[3]
@@ -109,62 +77,82 @@ end
 # ------- Read topography -----------
 
 # cell size
-# h = meshL ./ n
-# 
-# topogrid = readTopo( topofile, n, x0, h )
-# 
-# t1 = minimum(topogrid)
-# t2 = maximum(topogrid)
-# 
-# if t1 < x0[3] || t2 > xn[3]
-#    error("Topography outside of mesh.")
-# end   
-# 
-# # Figure out the number of surface cells for each point in
-# # the x,y grid.
-# itopo = getItopo(h,n,x0, topogrid)
+h = meshL ./ n
 
-# # ----- Generate initial model -------------------------------------------
-# 
+topogrid = readTopo( topofile, n, x0, h )
+
+t1 = minimum(topogrid)
+t2 = maximum(topogrid)
+
+if t1 < x0[3] || t2 > xn[3]
+   error("Topography outside of mesh.")
+end   
+
+# Figure out the number of surface cells for each point in
+# the x,y grid.
+itopo = getItopo(h,n,x0, topogrid)
+
+# ------- Generate mesh --------------------------------------------------
+
+println("Generating mesh")
+tic()
+
+z1 = min(t1, z1)
+z2 = max(t2, z2)
+nf = 2
+nc = 2
+
+S = createOcTreeFromBox(
+	x0[1], x0[2], x0[3],
+	n[1], n[2], n[3],
+	h[1], h[2], h[3],
+	x1, x2, y1, y2, z1, z2,
+	nf, nc)
+if doFV
+	M = getOcTreeMeshFV(S, h; x0 = x0)
+else
+	M = getOcTreeMeshFEM(S, h; x0 = x0)
+end
+
+toc()
+
+display(M)
+
+exportOcTreeMeshRoman("mesh.txt",M)
+
+# ----- Generate initial model -------------------------------------------
+
 println("Generating initial model")
+tic()
 
-#Mean elevation of topo is -1041.79
-zSurf   = -1041.79
-Xc      = getCellCenteredGrid(M)
-IBck    = find(Xc[:,3] .>  zSurf)
-IGrnd   = find(Xc[:,3] .<= zSurf)
+sigma, sigmaBck, isactive = getInitialmodel(M, itopo, halfSpaceCond, backCond)
+
 Iact    = speye(Bool,M.nc)
-Iact    = Iact[:,IGrnd]
+Iact    = Iact[:,find(isactive)]
 IactBck = speye(Bool,M.nc)
-IactBck = IactBck[:,IBck]
-
-# model a half space
-sigma    = ones(length(IGrnd))*halfSpaceCond
-sigmaBck = ones(length(IBck))*backCond
+IactBck = IactBck[:,find(!isactive)]
 
 sigmaBackground = IactBck * sigmaBck
- 
+
+toc()
+
 #------------ Set up forward problem -------------------------------------
 
 println("Setting up forward problem")
 tic()
 
+nEx,nEy,nEz = getEdgeNumbering(S)
+
 # transmitters
-Sources = zeros(Complex128, sum(M.ne), length(src))
+Sources = spzeros(Complex128, sum(M.ne), length(src))
 for i = 1:length(src)
-        ply          = [src[i][:,1:2] zSurf*ones(size(src[i],1))]
-	Sources[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,ply,normalize=false))
+	Sources[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,src[i],normalize=false))
 end
 
 # receivers
 Receivers = spzeros(Complex128, sum(M.ne), length(rcv))
 for i = 1:length(rcv)
-        ply            = [rcv[i][:,1:2] zSurf*ones(size(rcv[i],1))]
-        if sum(ply[1,:]-ply[2,:]) == 0.0
-          ply[1,3] = zSurf-10
-          ply[2,3] = zSurf+10
-        end
-	Receivers[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,ply,normalize=true))
+	Receivers[:,i] = complex(getEdgeIntegralOfPolygonalChain(M,rcv[i],normalize=true))
 end
 # for closed loops, scale by i / (omega * mu0)
 Obs = typeof(Receivers)[copy(Receivers) for i = 1:length(frq)]
@@ -176,18 +164,22 @@ for i = 1:length(rcv)
 	end
 end
 
-#linear solver
+# linear solver
 linSolParam = getMUMPSsolver([],1,0,2)
 
 # create forward solver for each frequency
 nFreqs = length(frq)
-pFor   = Array(RemoteRef{Channel{Any}},nFreqs)
+pFor   = Array(RemoteChannel,nFreqs)
+workerList = workers()
+nw         = length(workerList)
 for i = 1:nFreqs
   if doSE
-  	pFor[i] = @spawn getMaxwellFreqParamSE(M,Sources,Obs[i],fields,frq[i],linSolParam)
+  	pFor[i] = initRemoteChannel(getMaxwellFreqParamSE,workerList[i%nw+1],
+                                    M,Sources,Obs[i],fields,frq[i],linSolParam)
   else
   	fields = Array(Complex128, 0, 0)
-  	pFor[i] = @spawn getMaxwellFreqParam(M,Sources,Obs[i],fields,frq[i],linSolParam)
+  	pFor[i] = initRemoteChannel(getMaxwellFreqParam,workerList[i%nw+1],
+  	                            M,Sources,Obs[i],fields,frq[i],linSolParam)
   end
 end
 toc()
@@ -205,27 +197,18 @@ boundsHigh = fill(log(BH),size(Iact,2))
 pMisRF = getMisfitParam(pFor, Wd, Dobs, misfun,Iact,sigmaBackground)
 
 
-# if regfun == wdiffusionReg
-# #   surfweight =
-# #      try
-# #         surfweight
-# #      catch
-# #         [1.0]  # default value
-# #      end
-# 
-#    
-# 
-#    if !isdefined(:surfweight)
-#       surfweight = [1.0]
-#    end
-# 
-#    if length(surfweight) >= 1 && any( surfweight .!= 1 )
-#       Weights = getInterfaceWeights( M, itopo, surfweight, regparams[1:3] )
-#       regparams = vcat( regparams[4], Weights )
-#    else
-#       println("No interface weights.")
-#    end
-# end  # regfun == wdiffusionReg
+if regfun == wdiffusionReg
+   if !isdefined(:surfweight)
+      surfweight = [1.0]
+   end
+
+   if length(surfweight) >= 1 && any( surfweight .!= 1 )
+      Weights = getInterfaceWeights( M, itopo, surfweight, regparams[1:3] )
+      regparams = vcat( regparams[4], Weights )
+   else
+      println("No interface weights.")
+   end
+end  # regfun == wdiffusionReg
 regfunw(m,mreff,Mm) = wdiffusionReg(m,mreff,Mm,Iact=Iact,C=regparams)
 
 pInv = getInverseParam(M,modfun,regfunw,beta,mref,

@@ -1,4 +1,3 @@
-
 # get inversion parameters
 include("parametersForInversion.jl")
 
@@ -44,14 +43,14 @@ sigmaBackground = IactBck * sigmaBck
 ############################### Setup to remote forward and misfit param  ######################################
 
 #------------ Preparing forward mesh -------------------------------------
-println("Generating small meshes in parallel")
+println("Generating small forward modelling meshes in parallel")
 tic()
 
 #getMUMPSsolver(Ainv=[],doClear=1,ooc=0,sym=0)
 #linSolParam = getMUMPSsolver([],1,0,2)
 linSolParam = getIterativeSolver(KrylovMethods.bicgstb)
   
-meshingParam = cell(5)
+meshingParam    = Array{Any}(5)
 meshingParam[1] = nsmallcells 
 meshingParam[2] = mincellsize
 meshingParam[3] = itopo

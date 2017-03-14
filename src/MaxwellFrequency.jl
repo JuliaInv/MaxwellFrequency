@@ -4,15 +4,12 @@ using jInv.Mesh
 using jInv.Utils
 using jInv.LinearSolvers 
 using KrylovMethods
-using MaxwellUtils
-# hasJOcTree = false
-# try
-#   using JOcTree
-#   hasJOcTree = true
-# catch
-#   hasJOcTree = false
-# end
-
+hasJOcTree = false
+try
+  using JOcTree
+  hasJOcTree = true
+catch
+end
 
 import jInv.ForwardShare.getData
 import jInv.ForwardShare.getSensTMatVec
@@ -34,11 +31,7 @@ type MaxwellFreqParam{T} <: ForwardProbType
 	fname::AbstractString  # filename where pfor is stored
 end  # type MaxwellParam
 
-
 Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.freq, P.Ainv, P.fname)
-
-#Dummy edge constraints function for non-Octree meshes
-getEdgeConstraints(M::AbstractMesh) = 1.0
 
 export MaxwellFreqParamSE
 type MaxwellFreqParamSE{T} <: ForwardProbType
@@ -51,13 +44,12 @@ type MaxwellFreqParamSE{T} <: ForwardProbType
 	fname::AbstractString  # filename where pfor is stored
 end  # type MaxwellParam
 
-
-
 include("getMaxwellFreqParam.jl")
 include("getData.jl")
 include("getSensMatVec.jl")
 include("getSensTMatVec.jl")
 include("solveMaxFreq.jl")
-#include("getOTMeshFromTxRx.jl")
-
+if hasJOcTree
+  include("getOTMeshFromTxRx.jl")
+end
 end  # module MaxwellFrequency
