@@ -19,7 +19,7 @@ Minv = setupBigOctreeMeshPolygon(trx,h,n,x0,itopo,depth_core_inv,mincellfactor);
 toc()
 println("Inverse mesh has ", Minv.nc, " cells")
 
-exportOcTreeMeshRoman("meshInv.txt",Minv)
+exportUBCOcTreeMesh("meshInv.txt",Minv)
 
 # ----- Prepare the model to be run -------------------------------------
 # get conductivity model

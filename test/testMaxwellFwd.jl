@@ -13,7 +13,7 @@ end
 include("Maxwell-derivative-test.jl")
 
 omega = [0 12 0 4 0 3]
-n     = [24;24;16]
+n     = [16;16;14]
 Mr     = getRegularMesh(omega,n)
 
 # setup random sources
@@ -23,7 +23,6 @@ freq     = 1e2
 Obs      = Curl'*sprandn(sum(Mr.nf),20,0.001)
 fields   = []
 Ainv     = getMUMPSsolver([],1)
-#Ainv    = getIterativeSolver(100,1e-7,[],[],1)
 paramr   = getMaxwellFreqParam(Mr,Sources,Obs,fields,freq,Ainv)
 paramrSE = getMaxwellFreqParamSE(Mr,Sources,Obs,freq,Ainv)
 
@@ -58,12 +57,12 @@ w = getSensTMatVec(vec(u),m,paramr)
 println("Testing regular mesh explicit sensitivities")
 paramrSE  = getMaxwellFreqParamSE(Mr,Sources,Obs,freq,Ainv)
 # Derivative test
-function f(sigdum)
+function f1(sigdum)
   d, = getData(sigdum,paramrSE)
   return d
 end
-df(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramrSE)
-checkDerivativeMaxwellRegularSE,errorrSE,orderrSE = checkDerivativeMax(f,df,m;nSuccess=4)
+df1(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramrSE)
+checkDerivativeMaxwellRegularSE,errorrSE,orderrSE = checkDerivativeMax(f1,df1,m;nSuccess=4)
 @test checkDerivativeMaxwellRegularSE
 
 # Adjoint test
@@ -90,13 +89,13 @@ RE1 = norm(Dt-Dr)/norm(Dt)
 # Test implicit sensitivities
 println("Testing tensor mesh implicit sensitivities")
 #Derivative test
-function f(sigdum)
+function f2(sigdum)
   d, = getData(sigdum,paramt)
   return d
 end
   
-df(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramt)
-checkDerivativeMaxwellTensor,errort,ordert = checkDerivativeMax(f,df,m)
+df2(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramt)
+checkDerivativeMaxwellTensor,errort,ordert = checkDerivativeMax(f2,df2,m)
 @test checkDerivativeMaxwellTensor
 
 # adjoint test
@@ -107,24 +106,24 @@ w = getSensTMatVec(vec(u),m,paramt)
 @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
 
 # Test explicit sensitivities
-# println("Testing tensor mesh explicit sensitivities")
-# paramtSE  = getMaxwellFreqParamSE(Mt,Sources,Obs,freq,Ainv)
-# # Derivative test
-# function f(sigdum)
-#   d, = getData(sigdum,paramtSE)
-#   return d
-# end
-#   
-# df(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramtSE)
-# checkDerivativeMaxwellTensorSE,errortSE,ordertSE = checkDerivativeMax(f,df,m)
-# @test checkDerivativeMaxwellTensorSE
-# 
-# # Adjoint test
-# x = randn(length(m))
-# u = randn(size(Dt))
-# v = getSensMatVec(x,m,paramtSE)
-# w = getSensTMatVec(vec(u),m,paramtSE)
-# @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
+println("Testing tensor mesh explicit sensitivities")
+paramtSE  = getMaxwellFreqParamSE(Mt,Sources,Obs,freq,Ainv)
+# Derivative test
+function f3(sigdum)
+  d, = getData(sigdum,paramtSE)
+  return d
+end
+  
+df3(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramtSE)
+checkDerivativeMaxwellTensorSE,errortSE,ordertSE = checkDerivativeMax(f3,df3,m)
+@test checkDerivativeMaxwellTensorSE
+
+# Adjoint test
+x = randn(length(m))
+u = randn(size(Dt))
+v = getSensMatVec(x,m,paramtSE)
+w = getSensTMatVec(vec(u),m,paramtSE)
+@test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
 
 if hasJOcTree
   # Create corresponding OcTree mesh
@@ -145,12 +144,12 @@ if hasJOcTree
   # Test implicit sensitivities
   println("Testing OcTree mesh FV implicit sensitivities")
   # Derivative test
-  function f(sigdum)
+  function f4(sigdum)
     d, = getData(sigdum,paramofv)
     return d
   end
-  df(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramofv)
-  checkDerivativeMaxwellOcTreeFV,errorofv,orderofv = checkDerivativeMax(f,df,m)
+  df4(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramofv)
+  checkDerivativeMaxwellOcTreeFV,errorofv,orderofv = checkDerivativeMax(f4,df4,m)
   @test checkDerivativeMaxwellOcTreeFV
   
   # adjoint test
@@ -161,22 +160,22 @@ if hasJOcTree
   @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
   
   #Test explicit sensitivities
-#   println("Testing OcTree mesh FV explicit sensitivities")
-#   paramofvSE  = getMaxwellFreqParamSE(Mofv,Sources,Obs,freq,Ainv)
-#   #Derivative test
-#   function f(sigdum)
-#     d, = getData(sigdum,paramofvSE)
-#     return d
-#   end
-#   df(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramofvSE)
-#   checkDerivativeMaxwellOcTreeFVSE,errorofvSE,orderofvSE = checkDerivativeMax(f,df,m)
-#   @test checkDerivativeMaxwellOcTreeFVSE
-#   
-#   # adjoint test
-#   x = randn(length(m))
-#   u = randn(size(Dofv))
-#   v = getSensMatVec(x,m,paramofvSE)
-#   w = getSensTMatVec(vec(u),m,paramofvSE)
-#   @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
+  println("Testing OcTree mesh FV explicit sensitivities")
+  paramofvSE  = getMaxwellFreqParamSE(Mofv,Sources,Obs,freq,Ainv)
+  #Derivative test
+  function f(sigdum)
+    d, = getData(sigdum,paramofvSE)
+    return d
+  end
+  df(zdum,sigdum) = getSensMatVec(zdum,sigdum,paramofvSE)
+  checkDerivativeMaxwellOcTreeFVSE,errorofvSE,orderofvSE = checkDerivativeMax(f,df,m)
+  @test checkDerivativeMaxwellOcTreeFVSE
+  
+  # adjoint test
+  x = randn(length(m))
+  u = randn(size(Dofv))
+  v = getSensMatVec(x,m,paramofvSE)
+  w = getSensTMatVec(vec(u),m,paramofvSE)
+  @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
 end
 end #End of mesh consistency test set

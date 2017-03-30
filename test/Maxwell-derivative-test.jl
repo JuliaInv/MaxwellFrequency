@@ -11,14 +11,6 @@ function checkDerivativeMax(f::Function,df::Function,x0;kwargs...)
 	return checkDerivativeMax(testFun,x0;kwargs...)
 end
 
-function getRandomTestDirection(x0::Float64)
-	return randn()
-end
-
-function getRandomTestDirection(x0::Array{Float64})
-	return randn(size(x0))
-end
-
 function checkDerivativeMax(f::Function,x0;out::Bool=true,tol::Float64=1.9,nSuccess::Int=3,v=getRandomTestDirection(x0))
 # checkDerivative(f::Function,x0;out::Bool=true,tol::Float64=1.9,nSuccess::Int=3)
 	if out
@@ -28,7 +20,6 @@ function checkDerivativeMax(f::Function,x0;out::Bool=true,tol::Float64=1.9,nSucc
 	f0,dvf  = f(x0,v)
 	f0      = vec(f0)
 	nf0     = norm(f0)
-	#dvf    = real(dvf)
 	Error   = zeros(10,2)
 	Order   = zeros(10,2)
 	Success = zeros(10)
