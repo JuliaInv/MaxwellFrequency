@@ -1,3 +1,4 @@
+import jInv.ForwardShare.getSensMatVec
 export getSensMatVec
 
 # = ========= The forward sensitivity ===========================

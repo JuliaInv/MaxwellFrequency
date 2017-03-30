@@ -1,3 +1,4 @@
+import jInv.ForwardShare.getData
 export getData
 
 # = ========= The forward problem ===========================

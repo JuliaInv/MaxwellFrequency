@@ -1,3 +1,4 @@
+import jInv.ForwardShare.getSensTMatVec
 export getSensTMatVec
 
 # = ========= The Transpose sensitivity ===========================

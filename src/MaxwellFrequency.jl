@@ -4,52 +4,152 @@ using jInv.Mesh
 using jInv.Utils
 using jInv.LinearSolvers 
 using KrylovMethods
-hasJOcTree = false
-try
-  using JOcTree
-  hasJOcTree = true
-catch
-end
 
-import jInv.ForwardShare.getData
-import jInv.ForwardShare.getSensTMatVec
-import jInv.ForwardShare.getSensMatVec
-
-# ========== Setting up the parameter structure for the forward problem ========
-export MaxwellFreqParam
 import jInv.ForwardShare.ForwardProbType
-import jInv.ForwardShare.prepareMesh2Mesh
-export prepareMesh2Mesh
-export ForwardProbType
+export MaxwellFreqParam, getMaxwellFreqParam
+
+"""
+type MaxwellFrequency.MaxwellFreqParam <: ForwardProbType
+
+defines one MaxwellFrequency problem
+
+Fields:
+
+    Mesh::AbstractMesh
+    Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},SparseMatrixCSC}
+        - transpose interpolation matrix from fields to receivers
+    Fields::Array{Complex128}
+        - solution to the fwd problem
+    freq:Float64
+        - angular frequency (includes 2*pi term)
+    Ainv::AbstractSolver
+    fname::AbstractString     -> Not used??
+"""
 type MaxwellFreqParam{T} <: ForwardProbType
-	Mesh::T     # mesh                       
-	Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}  # used for calculating rhs   
-	Obs::Union{Array{Complex128},SparseMatrixCSC}  # transpose interpolation matrix from fields to receivers
-	Fields::Array{Complex128}    # solution to the fwd problem
-	freq::Float64  # includes 2*pi term
-	Ainv::AbstractSolver   # stores MUMPSfactorization
-	fname::AbstractString  # filename where pfor is stored
-end  # type MaxwellParam
+    Mesh::T
+    Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},SparseMatrixCSC}
+    Fields::Array{Complex128}
+    freq::Float64
+    Ainv::AbstractSolver
+    fname::AbstractString
+end
 
 Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.freq, P.Ainv, P.fname)
 
-export MaxwellFreqParamSE
-type MaxwellFreqParamSE{T} <: ForwardProbType
-	Mesh::T     # mesh                       
-	Sources::Union{Array{Complex128},SparseMatrixCSC}  # used for calculating rhs   
-	Obs::Union{Array{Complex128},SparseMatrixCSC}  # transpose interpolation matrix from fields to receivers
-	freq::Float64  # includes 2*pi term
-	Ainv::AbstractSolver   # stores MUMPSfactorization
-	Sens::Array{Complex128} # sensitivity matrix
-	fname::AbstractString  # filename where pfor is stored
-end  # type MaxwellParam
+"""
+function getMaxwellFreqParam
+    
+constructor for MaxwellFreqParam
 
-include("getMaxwellFreqParam.jl")
+Required Inputs
+
+    Mesh::AbstractMesh
+    Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},SparseMatrixCSC}
+        - transpose interpolation matrix from fields to receivers
+    Fields::Array{Complex128}
+        - solution to the fwd problem
+    freq:Float64
+        - angular frequency (includes 2*pi term)
+    linSolParam::AbstractSolver
+    fname::AbstractString
+        - filename where pfor is stored. Not used??
+"""
+function getMaxwellFreqParam(Mesh::AbstractMesh, 
+                             Sources, 
+                             Obs, 
+                             fields, 
+                             freq, 
+                             linSolParam::AbstractSolver; 
+                             fname="")
+    
+    if isempty(fields)
+        fields = Array(Complex128,0,0)
+    end
+
+    return MaxwellFreqParam(Mesh, Sources, Obs, fields, freq, linSolParam, fname)
+end
+
+export MaxwellFreqParamSE, getMaxwellFreqParamSE
+
+"""
+type MaxwellFrequency.MaxwellFreqParam <: ForwardProbType
+
+defines one MaxwellFrequency problem
+
+Fields:
+
+    Mesh::AbstractMesh
+    Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
+        - used for calculating rhs   
+    Obs::Union{Array{Complex128},SparseMatrixCSC}
+        - transpose interpolation matrix from fields to receivers
+    Fields::Array{Complex128}
+        - solution to the fwd problem
+    freq:Float64
+        - angular frequency (includes 2*pi term)
+    Ainv::AbstractSolver
+    Sens::Array{Complex128} 
+        - sensitivity matrix
+    fname::AbstractString
+        - filename where pfor is stored. Not used??
+"""
+type MaxwellFreqParamSE{T} <: ForwardProbType
+    Mesh::T
+    Sources::Union{Array{Complex128},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},SparseMatrixCSC}
+    freq::Float64
+    Ainv::AbstractSolver
+    Sens::Array{Complex128}
+    fname::AbstractString
+end
+
+"""
+function getMaxwellFreqParamSE
+    
+constructor for MaxwellFreqParamSE
+
+Required Inputs
+
+    Mesh::AbstractMesh
+    Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},SparseMatrixCSC}
+        - transpose interpolation matrix from fields to receivers
+    Fields::Array{Complex128}
+        - solution to the fwd problem
+    freq:Float64
+        - angular frequency (includes 2*pi term)
+    linSolParam::AbstractSolver
+    fname::AbstractString
+        - filename where pfor is stored. Not used??
+"""
+function getMaxwellFreqParamSE(M::AbstractMesh, 
+                               Sources,
+                               Obs,
+                               freq,
+                               linSolParam::AbstractSolver;
+                               fname="")
+    
+    Sens = Array(Complex128,0,0)
+    
+    return MaxwellFreqParamSE(M, Sources, Obs, freq, linSolParam, Sens, fname)
+end
+
 include("getData.jl")
 include("getSensMatVec.jl")
 include("getSensTMatVec.jl")
 include("solveMaxFreq.jl")
-if hasJOcTree
-  include("getOTMeshFromTxRx.jl")
+
+hasJOcTree = false
+try
+    using JOcTree
+    hasJOcTree = true
+catch
 end
-end  # module MaxwellFrequency
+
+include("Utils/getMaxwellFreqParamOT.jl")
+include("Utils/getOTMeshFromTxRx.jl")
+
+end
