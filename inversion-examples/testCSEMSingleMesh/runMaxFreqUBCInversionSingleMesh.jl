@@ -118,7 +118,7 @@ toc()
 
 display(M)
 
-exportOcTreeMeshRoman("mesh.txt",M)
+exportUBCOcTreeMesh("mesh.txt",M)
 
 # ----- Generate initial model -------------------------------------------
 
@@ -141,7 +141,7 @@ toc()
 println("Setting up forward problem")
 tic()
 
-nEx,nEy,nEz = getEdgeNumbering(S)
+#nEx,nEy,nEz = getEdgeNumbering(S)
 
 # transmitters
 Sources = spzeros(Complex128, sum(M.ne), length(src))

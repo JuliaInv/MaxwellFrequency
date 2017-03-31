@@ -63,7 +63,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 
 	M  = getOcTreeMeshFV(S,h;x0=x0)
 
-	nEx,nEy,nEz = getEdgeNumbering(S)
+	#nEx,nEy,nEz = getEdgeNumbering(S)
 
    # transmitters
 	s   = zeros(Complex128,sum(M.ne),length(Srcs))
@@ -195,7 +195,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
                               depth_core, mincellfactor)
 
 
-    nEx,nEy,nEz = getEdgeNumbering(M.S)
+    #nEx,nEy,nEz = getEdgeNumbering(M.S)
 
     # transmitters
     s = zeros(Complex128,sum(M.ne),length(Srcs))

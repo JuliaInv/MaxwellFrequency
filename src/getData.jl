@@ -18,7 +18,7 @@ function getData(sigma,   # conductivity
 	
 	Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
 	Mmu  = getFaceMassMatrix(param.Mesh,fill(1/mu,length(sigma)))
-  
+
   # eliminate hanging edges and faces
 	Ne,   = getEdgeConstraints(param.Mesh)
   Nf,Qf = getFaceConstraints(param.Mesh)
@@ -26,11 +26,14 @@ function getData(sigma,   # conductivity
   Curl = Qf  * Curl * Ne
   Msig = Ne' * Msig * Ne
   Mmu  = Nf' * Mmu  * Nf
+   iw = complex(0., w)
 
-	A   = Curl' * Mmu * Curl - (im * w) * Msig
-	rhs = (im * w) * (Ne' * S)
+	A   = Curl' * Mmu * Curl - iw * Msig
+	rhs = iw * (Ne' * S)
+   Curl=[] ; Nf=[] ; Qf=[] ; Mmu=[]
 	
 	param.Ainv.doClear = 1
+   # Solve: A*U = rhs
 	U, param.Ainv = solveMaxFreq(A, rhs, Msig,
 	                             param.Mesh, w, param.Ainv,0)
 	param.Ainv.doClear = 0
