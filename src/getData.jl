@@ -10,26 +10,17 @@ function getData(sigma,   # conductivity
 	
 	doClearAll=false
 
-	mu   = 4*pi*1e-7
 	w    = param.freq
 	S    = param.Sources
 	P    = param.Obs
 	
-	Curl = getCurlMatrix(param.Mesh)
-	
-	Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
-	Mmu  = getFaceMassMatrix(param.Mesh,fill(1/mu,length(sigma)))
-  
-  # eliminate hanging edges and faces
-	Ne,   = getEdgeConstraints(param.Mesh)
-  Nf,Qf = getFaceConstraints(param.Mesh)
-  
-  Curl = Qf  * Curl * Ne
-  Msig = Ne' * Msig * Ne
-  Mmu  = Nf' * Mmu  * Nf
+	A = getMaxwellFreqMatrix(sigma, param)
 
-	A   = Curl' * Mmu * Curl - (im * w) * Msig
-	rhs = (im * w) * (Ne' * S)
+	Ne,   = getEdgeConstraints(param.Mesh)
+	Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
+  	Msig = Ne' * Msig * Ne
+  
+  	rhs = (im * w) * (Ne' * S)
 	
 	param.Ainv.doClear = 1
 	U, param.Ainv = solveMaxFreq(A, rhs, Msig,

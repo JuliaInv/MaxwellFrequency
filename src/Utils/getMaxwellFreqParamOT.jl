@@ -147,7 +147,6 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
                              doFV::Bool=true,
                              doSE=true)
 
-    const mu0 = 4*pi*1e-7
     freq    = TR.omega
     
     nsmallcells   = meshingParam[1]

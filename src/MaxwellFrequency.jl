@@ -8,6 +8,8 @@ using KrylovMethods
 import jInv.ForwardShare.ForwardProbType
 export MaxwellFreqParam, getMaxwellFreqParam
 
+const mu0 = 4*pi*1e-7
+
 """
 type MaxwellFrequency.MaxwellFreqParam <: ForwardProbType
 
@@ -141,6 +143,7 @@ include("getData.jl")
 include("getSensMatVec.jl")
 include("getSensTMatVec.jl")
 include("solveMaxFreq.jl")
+include("getMaxwellFreqMatrix.jl")
 
 hasJOcTree = false
 try

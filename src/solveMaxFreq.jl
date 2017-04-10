@@ -46,7 +46,6 @@ function solveMaxFreq(A::SparseMatrixCSC,
 
     # setup preconditioner using Aphi system
     if linSolParam.doClear == 1
-        mu0 = 4*pi*1e-7
         MmuN = getNodalMassMatrix(mesh,vec(zeros(mesh.nc).+1/mu0))
         Grad = getNodalGradientMatrix(mesh)
 
