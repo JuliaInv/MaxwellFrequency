@@ -33,7 +33,6 @@ mincellfactor = 1    # minimum cellsize below topo
 
 
 # parameters for the forward problem
-fname = ""    # leave empty for now
 doFV  = true  # use finite volume (other option FEM for finite elements)
 doSE  = false # SE = sensitivity explicit - store sensitivities and not factorizations
  

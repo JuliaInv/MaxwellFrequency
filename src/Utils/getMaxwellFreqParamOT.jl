@@ -15,7 +15,6 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 							 nc=2,
 							 Box::Array{Float64}=[2.0  2; 2  2; 2  4],
 							 linSolParam::AbstractSolver=getMUMPSsolver([],1,0),
-							 fname="",
 							 doFV::Bool=true,doSE=true,ncells=[1e4;2e4;])
 
 	S = getOTMeshFromTxRx(x0,n,h,Srcs,Recs,nf,nc,Box)
@@ -55,9 +54,9 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 		obs[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Recs[k],normalize=true))
 	end
 	if doSE
-		pFor = getMaxwellFreqParamSE(M,s,obs,freq,linSolParam,fname=fname)
+		pFor = getMaxwellFreqParamSE(M,s,obs,freq,linSolParam)
 	else
-		pFor =  getMaxwellFreqParam(M,s,obs,[],freq,linSolParam,fname=fname)
+		pFor =  getMaxwellFreqParam(M,s,obs,[],freq,linSolParam)
 	end
 	return pFor
 end
@@ -70,7 +69,6 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 							 freq::Array,
 							 SrcRecMap::SparseMatrixCSC;                # maps receivers to sources
 							 ProbSrcMap::SparseMatrixCSC=speye(length(Srcs)),  # maps sources to pFor's, default: single source
-							 fname="",
 							 nf=2,
 							 nc=2,
 							 Box=[2.0  2; 2  2; 2  4],
@@ -119,7 +117,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 					if !all(iFreq.==iFreq[1])
 						error("pFor can only handle one frequency!")
 					end
-					pFor[idx]  = initRemoteChannel(getMaxwellFreqParam,p,x0,n,h,Srcs[[iSrc;]],Recs[[indRec;]],freq[iFreq[1]],nf,nc,Box,linSolParam,fname,doFV,doSE,ncells)
+					pFor[idx]  = initRemoteChannel(getMaxwellFreqParam,p,x0,n,h,Srcs[[iSrc;]],Recs[[indRec;]],freq[iFreq[1]],nf,nc,Box,linSolParam,doFV,doSE,ncells)
 					wait(pFor[idx])
 					probs[p] +=1
 				end
@@ -143,7 +141,6 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
                              itopo::Array,
                              meshingParam::Array,
                              linSolParam::AbstractSolver=getMUMPSsolver([],1,0),
-                             fname="",
                              doFV::Bool=true,
                              doSE=true)
 
@@ -201,9 +198,9 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
     linSolParam = getMUMPSsolver([],1,0)
 
 	if doSE
-		pFor = getMaxwellFreqParamSE(M,Sources,Obs,freq,linSolParam,fname="")
+		pFor = getMaxwellFreqParamSE(M,Sources,Obs,freq,linSolParam)
 	else
-		pFor = getMaxwellFreqParam(M,Sources,Obs,[],freq,linSolParam,fname="")
+		pFor = getMaxwellFreqParam(M,Sources,Obs,[],freq,linSolParam)
 	end
 
     write(STDOUT, @sprintf("    Mesh Size: %10i\n", pFor.Mesh.nc))
@@ -219,7 +216,6 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 							 itopo::Array,
 							 meshingParam::Array,
  							 linSolParam::AbstractSolver=getMUMPSsolver([],1,0),
- 						 	 fname="",
  							 doFV::Bool=true,
 							 doSE=true)
 
@@ -247,7 +243,6 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 											itopo,
 											meshingParam,
 											linSolParam,
-											fname,
 											doFV,
 											doSE)
 				end

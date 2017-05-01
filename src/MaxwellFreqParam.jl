@@ -17,7 +17,6 @@ Fields:
     freq:Float64
         - angular frequency (includes 2*pi term)
     Ainv::AbstractSolver
-    fname::AbstractString     -> Not used??
 """
 type MaxwellFreqParam{T} <: ForwardProbType
     Mesh::T
@@ -26,10 +25,9 @@ type MaxwellFreqParam{T} <: ForwardProbType
     Fields::Array{Complex128}
     freq::Float64
     Ainv::AbstractSolver
-    fname::AbstractString
 end
 
-Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.freq, P.Ainv, P.fname)
+Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.freq, P.Ainv)
 
 """
 function getMaxwellFreqParam
@@ -47,22 +45,19 @@ Required Inputs
     freq:Float64
         - angular frequency (includes 2*pi term)
     linSolParam::AbstractSolver
-    fname::AbstractString
-        - filename where pfor is stored. Not used??
 """
 function getMaxwellFreqParam(Mesh::AbstractMesh, 
                              Sources, 
                              Obs, 
                              fields, 
                              freq, 
-                             linSolParam::AbstractSolver; 
-                             fname="")
+                             linSolParam::AbstractSolver)
     
     if isempty(fields)
         fields = Array(Complex128,0,0)
     end
 
-    return MaxwellFreqParam(Mesh, Sources, Obs, fields, freq, linSolParam, fname)
+    return MaxwellFreqParam(Mesh, Sources, Obs, fields, freq, linSolParam)
 end
 
 export MaxwellFreqParamSE, getMaxwellFreqParamSE
@@ -86,8 +81,6 @@ Fields:
     Ainv::AbstractSolver
     Sens::Array{Complex128} 
         - sensitivity matrix
-    fname::AbstractString
-        - filename where pfor is stored. Not used??
 """
 type MaxwellFreqParamSE{T} <: ForwardProbType
     Mesh::T
@@ -96,7 +89,6 @@ type MaxwellFreqParamSE{T} <: ForwardProbType
     freq::Float64
     Ainv::AbstractSolver
     Sens::Array{Complex128}
-    fname::AbstractString
 end
 
 """
@@ -115,17 +107,14 @@ Required Inputs
     freq:Float64
         - angular frequency (includes 2*pi term)
     linSolParam::AbstractSolver
-    fname::AbstractString
-        - filename where pfor is stored. Not used??
 """
 function getMaxwellFreqParamSE(M::AbstractMesh, 
                                Sources,
                                Obs,
                                freq,
-                               linSolParam::AbstractSolver;
-                               fname="")
+                               linSolParam::AbstractSolver)
     
     Sens = Array(Complex128,0,0)
     
-    return MaxwellFreqParamSE(M, Sources, Obs, freq, linSolParam, Sens, fname)
+    return MaxwellFreqParamSE(M, Sources, Obs, freq, linSolParam, Sens)
 end

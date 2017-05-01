@@ -57,7 +57,7 @@ meshingParam[3] = itopo
 meshingParam[4] = depth_core
 meshingParam[5] = mincellfactor
   
-pFor = getMaxwellFreqParam(x0,n,h,trx,itopo,meshingParam,linSolParam,fname,doFV,doSE)
+pFor = getMaxwellFreqParam(x0,n,h,trx,itopo,meshingParam,linSolParam,doFV,doSE)
 
 
 toc()
