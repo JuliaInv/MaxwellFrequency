@@ -21,10 +21,9 @@ Curl     = getCurlMatrix(Mr)
 Sources  = map(Complex{Float64},Curl'*randn(sum(Mr.nf),5))
 freq     = 1e2
 Obs      = Curl'*sprandn(sum(Mr.nf),20,0.001)
-fields   = []
 Ainv     = getMUMPSsolver([],1)
-paramr   = getMaxwellFreqParam(Mr,Sources,Obs,fields,freq,Ainv)
-paramrSE = getMaxwellFreqParamSE(Mr,Sources,Obs,freq,Ainv)
+paramr   = getMaxwellFreqParam(Mr,Sources,Obs,[],freq,Ainv)
+paramrSE = getMaxwellFreqParam(Mr,Sources,Obs,[],freq,Ainv,sensitivityMethod=:Explicit)
 
 # conductivitie
 p = rand(Mr.nc)
@@ -55,7 +54,8 @@ w = getSensTMatVec(vec(u),m,paramr)
 
 # Test explicit sensitivities
 println("Testing regular mesh explicit sensitivities")
-paramrSE  = getMaxwellFreqParamSE(Mr,Sources,Obs,freq,Ainv)
+paramrSE  = getMaxwellFreqParam(Mr,Sources,Obs,[],freq,Ainv,sensitivityMethod=:Explicit)
+
 # Derivative test
 function f1(sigdum)
   d, = getData(sigdum,paramrSE)
@@ -79,7 +79,7 @@ h3 = Mr.h[3]*ones(n[3])
 Mt = getTensorMesh3D(h1,h2,h3)
 
 # call getData
-paramt     = getMaxwellFreqParam(Mt,Sources,Obs,fields,freq,Ainv)
+paramt     = getMaxwellFreqParam(Mt,Sources,Obs,[],freq,Ainv)
 Dt, paramt = getData(m,paramt);
 
 #Test that regular mesh data agree with tensor mesh data
@@ -107,7 +107,7 @@ w = getSensTMatVec(vec(u),m,paramt)
 
 # Test explicit sensitivities
 println("Testing tensor mesh explicit sensitivities")
-paramtSE  = getMaxwellFreqParamSE(Mt,Sources,Obs,freq,Ainv)
+paramtSE  = getMaxwellFreqParam(Mr,Sources,Obs,[],freq,Ainv,sensitivityMethod=:Explicit)
 # Derivative test
 function f3(sigdum)
   d, = getData(sigdum,paramtSE)
@@ -134,7 +134,7 @@ if hasJOcTree
   Mofv  = getOcTreeMeshFV(S,h)
 
   # call getData
-  paramofv       = getMaxwellFreqParam(Mofv,Sources,Obs,fields,freq,Ainv)
+  paramofv       = getMaxwellFreqParam(Mofv,Sources,Obs,[],freq,Ainv)
   Dofv, paramofv = getData(m,paramofv)
   
   #Test that tensor data agree with OcTreeFV data
@@ -161,7 +161,8 @@ if hasJOcTree
   
   #Test explicit sensitivities
   println("Testing OcTree mesh FV explicit sensitivities")
-  paramofvSE  = getMaxwellFreqParamSE(Mofv,Sources,Obs,freq,Ainv)
+  paramofvSE  = getMaxwellFreqParam(Mofv,Sources,Obs,[],freq,Ainv,sensitivityMethod=:Explicit)
+                                    
   #Derivative test
   function f(sigdum)
     d, = getData(sigdum,paramofvSE)

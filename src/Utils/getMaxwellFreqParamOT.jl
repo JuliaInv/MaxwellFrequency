@@ -54,7 +54,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
 		obs[:,k] = sparse(getEdgeIntegralOfPolygonalChain(M,Recs[k],normalize=true))
 	end
 	if doSE
-		pFor = getMaxwellFreqParamSE(M,s,obs,freq,linSolParam)
+		pFor = getMaxwellFreqParam(M,s,obs,[],freq,linSolParam,sensitivityMethod=:Explicit)
 	else
 		pFor =  getMaxwellFreqParam(M,s,obs,[],freq,linSolParam)
 	end
@@ -198,7 +198,7 @@ function getMaxwellFreqParam(x0::Array{Float64,1},
     linSolParam = getMUMPSsolver([],1,0)
 
 	if doSE
-		pFor = getMaxwellFreqParamSE(M,Sources,Obs,freq,linSolParam)
+		pFor = getMaxwellFreqParam(M,Sources,Obs,[],freq,linSolParam, sensitivityMethod=:Explicit)
 	else
 		pFor = getMaxwellFreqParam(M,Sources,Obs,[],freq,linSolParam)
 	end
