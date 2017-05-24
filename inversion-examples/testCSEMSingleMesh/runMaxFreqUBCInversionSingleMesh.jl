@@ -118,7 +118,7 @@ toc()
 
 display(M)
 
-exportOcTreeMeshRoman("mesh.txt",M)
+exportUBCOcTreeMesh("mesh.txt",M)
 
 # ----- Generate initial model -------------------------------------------
 

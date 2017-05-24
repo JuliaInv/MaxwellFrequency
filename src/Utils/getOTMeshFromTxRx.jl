@@ -1,3 +1,6 @@
+
+if hasJOcTree
+	
 export getOTMeshFromTxRx
 
 function getOTMeshFromTxRx(x0::Array{Float64,1},
@@ -42,3 +45,5 @@ function getOTMeshFromTxRx(x0::Array{Float64,1},
 
    return S
 end	
+
+end

@@ -1,3 +1,4 @@
+import jInv.ForwardShare.getSensMatVec
 export getSensMatVec
 
 # = ========= The forward sensitivity ===========================
@@ -7,24 +8,15 @@ function getSensMatVec(x::Vector,
 					        param::MaxwellFreqParam)
     # Sens Mat Vec for FV disctretization on OcTreeMesh
     # matv = J*x
-	mu   = 4*pi*1e-7
 	U    = param.Fields
 	w    = param.freq
 	P    = param.Obs
 	
-	Curl = getCurlMatrix(param.Mesh)
-	Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
-  Mmu  = getFaceMassMatrix(param.Mesh,fill(1/mu,length(sigma)))
-  
-  # eliminate hanging edges and faces
-	Ne,   = getEdgeConstraints(param.Mesh)
-  Nf,Qf = getFaceConstraints(param.Mesh)
-  
-  Curl = Qf  * Curl * Ne
-  Msig = Ne' * Msig * Ne
-  Mmu  = Nf' * Mmu  * Nf
-
-	A    = Curl' * Mmu * Curl - (im * w) * Msig
+    Ne,   = getEdgeConstraints(param.Mesh)
+    Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
+    Msig = Ne' * Msig * Ne
+    
+    A = getMaxwellFreqMatrix(sigma, param)
 	
 	matv = zeros(Complex128,size(P,2),size(U,2))
 
