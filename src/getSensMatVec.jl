@@ -10,11 +10,7 @@ function getSensMatVec(x::Vector, sigma::Vector, param::MaxwellFreqParam)
         U = param.Fields
         w = param.freq
         P = param.Obs
-        
         Ne, = getEdgeConstraints(param.Mesh)
-        Msig = getEdgeMassMatrix(param.Mesh, vec(sigma))
-        Msig = Ne' * Msig * Ne
-        
         A = getMaxwellFreqMatrix(sigma, param)
         
         matv = zeros(Complex128, size(P, 2), size(U, 2))
@@ -23,7 +19,7 @@ function getSensMatVec(x::Vector, sigma::Vector, param::MaxwellFreqParam)
             u = U[:, i] 
             dAdm = getdEdgeMassMatrix(param.Mesh, u)
             z = -im*w*Ne'*dAdm*x
-            z, = solveMaxFreq(A, z, Msig, param.Mesh, w, param.Ainv, 0)
+            z, = solveMaxFreq(A, z, sigma, param.Mesh, w, param.Ainv, 0)
             z = vec(Ne*z)
             matv[:, i] = -P'*z   
         end

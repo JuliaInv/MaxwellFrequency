@@ -12,17 +12,13 @@ function getData(sigma, param::MaxwellFreqParam, doClear::Bool=false)
         w = param.freq
         S = param.Sources
         P = param.Obs
+        Ne, = getEdgeConstraints(param.Mesh)      
         
         A = getMaxwellFreqMatrix(sigma, param)
-
-        Ne, = getEdgeConstraints(param.Mesh)
-        Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
-        Msig = Ne' * Msig * Ne
-      
         rhs = (im * w) * (Ne' * S)
         
         param.Ainv.doClear = 1
-        U, param.Ainv = solveMaxFreq(A, rhs, Msig, param.Mesh, w, param.Ainv, 0)
+        U, param.Ainv = solveMaxFreq(A, rhs, sigma, param.Mesh, w, param.Ainv, 0)
         param.Ainv.doClear = 0
       
         U = Ne * U
@@ -59,8 +55,6 @@ function getSensMat(sigma, param)
     P    = param.Obs
     
     Ne, = getEdgeConstraints(param.Mesh)
-    Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
-    Msig = Ne' * Msig * Ne
     A = getMaxwellFreqMatrix(sigma, param)
 
     X    = reshape(complex(x),size(P,2),size(U,2),size(x,2))
@@ -68,7 +62,7 @@ function getSensMat(sigma, param)
 
     for i=1:size(U,2)
         Z     = -Ne'*(P*X[:,i,:])
-        Z,    = solveMaxFreq(A,Z,Msig,param.Mesh,w,param.Ainv,1)
+        Z,    = solveMaxFreq(A,Z,sigma,param.Mesh,w,param.Ainv,1)
         u     = U[:,i]
         dAdm  = getdEdgeMassMatrix(param.Mesh,u)
         dAdm  = -im*w*Ne'*dAdm
