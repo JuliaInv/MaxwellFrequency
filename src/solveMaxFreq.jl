@@ -24,7 +24,7 @@ output:
 """
 function solveMaxFreq(A::SparseMatrixCSC, 
                       rhs::Union{Array,SparseMatrixCSC}, 
-                      MsigE::SparseMatrixCSC,
+                      sigma::Vector{Float64},
                       mesh::AbstractMesh,
                       w::Real,
                       linSolParam::AbstractSolver,
@@ -38,7 +38,7 @@ end
 
 function solveMaxFreq(A::SparseMatrixCSC, 
                       rhs::Union{Array,SparseMatrixCSC}, 
-                      MsigE::SparseMatrixCSC,
+                      sigma::Vector{Float64},
                       mesh::AbstractMesh,
                       w::Real,
                       linSolParam::IterativeSolver,
@@ -48,6 +48,10 @@ function solveMaxFreq(A::SparseMatrixCSC,
     if linSolParam.doClear == 1
         MmuN = getNodalMassMatrix(mesh,vec(zeros(mesh.nc).+1/mu0))
         Grad = getNodalGradientMatrix(mesh)
+
+        Ne, = getEdgeConstraints(mesh)
+        MsigE = getEdgeMassMatrix(mesh,vec(sigma))
+        MsigE = Ne' * MsigE * Ne
 
         STBa = Grad*MmuN*Grad'
         Aap = [A + STBa          -(im*w)*MsigE*Grad; 

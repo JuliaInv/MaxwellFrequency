@@ -166,8 +166,8 @@ workerList = workers()
 nw         = length(workerList)
 for i = 1:nFreqs
   if doSE
-    pFor[i] = initRemoteChannel(getMaxwellFreqParamSE,workerList[i%nw+1],
-                                    M,Sources,Obs[i],fields,frq[i],linSolParam)
+    pFor[i] = initRemoteChannel(getMaxwellFreqParam,workerList[i%nw+1],
+                                M,Sources,Obs[i],fields,frq[i],linSolParam;sensitivityMethod=:Explicit)
   else
     fields = Array(Complex128, 0, 0)
     pFor[i] = initRemoteChannel(getMaxwellFreqParam,workerList[i%nw+1],
