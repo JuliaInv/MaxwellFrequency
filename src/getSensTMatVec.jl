@@ -24,11 +24,11 @@ function getSensTMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqPar
         Ne, = getEdgeConstraints(param.Mesh)
 
         X    = reshape(complex(x), size(P,2), size(U,2))
-        matv = zeros(param.Mesh.nc)
+        matv = zeros(size(sigma))
 
         for i=1:size(U, 2)
             u = U[:, i]
-            dAdm = getdEdgeMassMatrix(param.Mesh, u)
+            dAdm = getdEdgeMassMatrix(param.Mesh, sigma, u)
             dAdm = -im*w*Ne'*dAdm
             z = -Ne'*(P*X[:, i])
             z, = solveMaxFreq(z, sigma, param, 1)

@@ -28,7 +28,7 @@ function getSensMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqPara
 
         for i=1:size(U, 2)
             u = U[:, i]
-            dAdm = getdEdgeMassMatrix(param.Mesh, u)
+            dAdm = getdEdgeMassMatrix(param.Mesh, sigma, u)
             z = -im*w*Ne'*dAdm*x
             z, = solveMaxFreq(z, sigma, param, 0)
             z = vec(Ne*z)

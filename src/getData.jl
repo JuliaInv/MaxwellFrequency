@@ -99,7 +99,7 @@ function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
         Z = -Ne'*(P*X[:,i,:])
         Z, = solveMaxFreq(Z,sigma,param,1)
         u = U[:,i]
-        dAdm = getdEdgeMassMatrix(param.Mesh,u)
+        dAdm = getdEdgeMassMatrix(param.Mesh,sigma,u)
         dAdm = -im*w*Ne'*dAdm
         sensMat += (dAdm'*Z)
     end
