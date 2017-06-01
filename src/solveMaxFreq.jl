@@ -2,28 +2,26 @@
 export solveMaxFreq
 
 """
-function en, linSolParam = solveMaxFreq(A, rhs, Msig, M, w,linSolParam, flag)
+function en, linSolParam = solveMaxFreq(A, rhs, sigma, M, w, linSolParam, flag)
 
 Solves the Maxwell frequency domain forward problem.
 
-inputs: 
-        A::SparseMatrixCSC          - Stiffness matrix
-        rhs::Array                  - Right hand side
-        MsigE::SparseMatrixCSC      - The edge conductivity mass matrix
-        mesh::AbstractMesh          - The mesh
-        w::Real                     - The angular frequency being solved
-        linSolParam::AbstractSolver - Linear solver parameters
-        doTranspose::Int=0          - Solve the transposed system
-       
-       
-       
+inputs:
+      A::SparseMatrixCSC          - Stiffness matrix
+      rhs::Array                  - Right hand side
+      sigma::Vector{Float64}      - Conductivity model
+      mesh::AbstractMesh          - The mesh
+      w::Real                     - The angular frequency being solved
+      linSolParam::AbstractSolver - Linear solver parameters
+      doTranspose::Int=0          - Solve the transposed system
+
 output:
-        en:Array{Complex{Float64}}  - Solution (electric fields on cell edges)
-        linSolParam::AbstractSolver - Linear solver parameters
-       
+      en:Array{Complex{Float64}}  - Solution (electric fields on cell edges)
+      linSolParam::AbstractSolver - Linear solver parameters
+
 """
-function solveMaxFreq(A::SparseMatrixCSC, 
-                      rhs::Union{Array,SparseMatrixCSC}, 
+function solveMaxFreq(A::SparseMatrixCSC,
+                      rhs::Union{Array,SparseMatrixCSC},
                       sigma::Vector{Float64},
                       mesh::AbstractMesh,
                       w::Real,
@@ -36,8 +34,8 @@ function solveMaxFreq(A::SparseMatrixCSC,
     return en, linSolParam
 end
 
-function solveMaxFreq(A::SparseMatrixCSC, 
-                      rhs::Union{Array,SparseMatrixCSC}, 
+function solveMaxFreq(A::SparseMatrixCSC,
+                      rhs::Union{Array,SparseMatrixCSC},
                       sigma::Vector{Float64},
                       mesh::AbstractMesh,
                       w::Real,
@@ -46,15 +44,15 @@ function solveMaxFreq(A::SparseMatrixCSC,
 
     # setup preconditioner using Aphi system
     if linSolParam.doClear == 1
-        MmuN = getNodalMassMatrix(mesh,vec(zeros(mesh.nc).+1/mu0))
+        MmuN = getNodalMassMatrix(mesh,  fill(1./mu0, mesh.nc))
         Grad = getNodalGradientMatrix(mesh)
 
         Ne, = getEdgeConstraints(mesh)
-        MsigE = getEdgeMassMatrix(mesh,vec(sigma))
+        MsigE = getEdgeMassMatrix(mesh, sigma)
         MsigE = Ne' * MsigE * Ne
 
         STBa = Grad*MmuN*Grad'
-        Aap = [A + STBa          -(im*w)*MsigE*Grad; 
+        Aap = [A + STBa          -(im*w)*MsigE*Grad;
              -(im*w)*Grad'*MsigE  -(im*w)*Grad'*MsigE*Grad]
 
         Map(x) = ssor(Aap,x,out=-1)[1]
@@ -68,6 +66,36 @@ function solveMaxFreq(A::SparseMatrixCSC,
     linSolParam.sym = 2 # structurally symmetric
     en, linSolParam = solveLinearSystem(A,rhs,linSolParam,doTranspose)
 
-    return en, linSolParam    
+    return en, linSolParam
 
+end
+
+function solveMaxFreq(rhs::Union{Array,SparseMatrixCSC},
+                      sigma::Vector{Float64},
+                      param::MaxwellFreqParam,
+                      doTranspose::Int=0)
+
+    if param.storageLevel == :Matrices
+        if isempty(param.Matrices)
+            A = getMaxwellFreqMatrix(sigma, param)
+            push!(param.Matrices, A)
+        else
+            A = param.Matrices[1]
+        end
+    elseif param.storageLevel == :Factors
+        if param.Ainv.Ainv == []
+            A = getMaxwellFreqMatrix(sigma, param)
+        else
+            A = speye(Complex{Float64}, 0)
+        end
+    else
+        A = getMaxwellFreqMatrix(sigma, param)
+    end
+
+    en, param.Ainv = solveMaxFreq(A,rhs,sigma,param.Mesh,param.freq,param.Ainv,doTranspose)
+    if (param.storageLevel != :Factors) & ~isa(param.Ainv, IterativeSolver)
+        clear!(param.Ainv)
+    end
+
+    return en, param.Ainv
 end

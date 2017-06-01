@@ -1,9 +1,21 @@
 import jInv.ForwardShare.getSensMatVec
 export getSensMatVec
 
-function getSensMatVec(x::Vector, sigma::Vector, param::MaxwellFreqParam)
-    # Sens Mat Vec for FV disctretization
-    # matv = J*x
+"""
+function matv = getSensMatVec(x, sigma, param)
+
+Multiplies the sensitvity matrix by a vector
+
+inputs:
+        x::Vector               - A vector
+        sigma::Vector{Float64}  - A conductivity model
+        param::MaxwellFreqParam - MaxwellFreqParam
+
+output:
+        matv:Array{Complex{Float64}}  - Solution (J*x)
+
+"""
+function getSensMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqParam)
 
     if param.sensitivityMethod == :Implicit
 
@@ -11,17 +23,16 @@ function getSensMatVec(x::Vector, sigma::Vector, param::MaxwellFreqParam)
         w = param.freq
         P = param.Obs
         Ne, = getEdgeConstraints(param.Mesh)
-        A = getMaxwellFreqMatrix(sigma, param)
-        
+
         matv = zeros(Complex128, size(P, 2), size(U, 2))
 
         for i=1:size(U, 2)
-            u = U[:, i] 
+            u = U[:, i]
             dAdm = getdEdgeMassMatrix(param.Mesh, u)
             z = -im*w*Ne'*dAdm*x
-            z, = solveMaxFreq(A, z, sigma, param.Mesh, w, param.Ainv, 0)
+            z, = solveMaxFreq(z, sigma, param, 0)
             z = vec(Ne*z)
-            matv[:, i] = -P'*z   
+            matv[:, i] = -P'*z
         end
 
     elseif param.sensitivityMethod == :Explicit

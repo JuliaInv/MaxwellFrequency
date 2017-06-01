@@ -1,8 +1,21 @@
 import jInv.ForwardShare.getSensTMatVec
 export getSensTMatVec
 
-function getSensTMatVec(x::Vector, sigma::Vector, param::MaxwellFreqParam)
-    # SensT Mat Vec for FV disctretization
+"""
+function matv = getSensTMatVec(x, sigma, param)
+
+Multiplies the transposed sensitvity matrix by a vector
+
+inputs:
+        x::Vector               - A vector
+        sigma::Vector{Float64}  - A conductivity model
+        param::MaxwellFreqParam - MaxwellFreqParam
+
+output:
+        matv:Array{Complex{Float64}}  - Solution (J.T*x)
+
+"""
+function getSensTMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqParam)
 
     if param.sensitivityMethod == :Implicit
         U = param.Fields
@@ -10,17 +23,15 @@ function getSensTMatVec(x::Vector, sigma::Vector, param::MaxwellFreqParam)
         P = param.Obs
         Ne, = getEdgeConstraints(param.Mesh)
 
-        A = getMaxwellFreqMatrix(sigma, param)
-
         X    = reshape(complex(x), size(P,2), size(U,2))
-        matv = zeros(size(sigma))
-      
+        matv = zeros(param.Mesh.nc)
+
         for i=1:size(U, 2)
-            u = U[:, i] 
+            u = U[:, i]
             dAdm = getdEdgeMassMatrix(param.Mesh, u)
             dAdm = -im*w*Ne'*dAdm
             z = -Ne'*(P*X[:, i])
-            z, = solveMaxFreq(A, z, sigma, param.Mesh, w, param.Ainv, 1)
+            z, = solveMaxFreq(z, sigma, param, 1)
             z = vec(z)
             matv += real(dAdm'*z)
         end
