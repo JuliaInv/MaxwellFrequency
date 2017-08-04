@@ -85,10 +85,10 @@ function getMaxwellFreqParam(Mesh::AbstractMesh,
     in(storageLevel,supportedStorageLevels) || error("Unknown storageLevel selection")
 
     if isempty(fields)
-        fields = Array(Complex128,0,0)
+        fields = Array{Complex128}(0, 0)
     end
 
     return MaxwellFreqParam(Mesh, Sources, Obs, fields, 
-                            Array(Complex128,0,0), Array(SparseMatrixCSC,0,0),
+                            Array{Complex128}(0, 0), Array{SparseMatrixCSC}(0, 0),
                             freq, linSolParam, sensitivityMethod, storageLevel)
 end

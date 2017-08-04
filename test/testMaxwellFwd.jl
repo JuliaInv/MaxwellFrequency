@@ -50,7 +50,7 @@ x = randn(length(m))
 u = randn(100)
 v = getSensMatVec(x,m,paramr)
 w = getSensTMatVec(vec(u),m,paramr)
-@test_approx_eq_eps norm(vec(u)'*vec(v))  norm(w'*x) 1e-13
+@test norm((vec(u))' * vec(v)) ≈ norm(w' * x) atol=1.0e-13
 
 # Test explicit sensitivities
 println("Testing regular mesh explicit sensitivities")
@@ -70,7 +70,7 @@ x = randn(length(m))
 u = randn(size(Dr))
 v = getSensMatVec(x,m,paramrSE)
 w = getSensTMatVec(vec(u),m,paramrSE)
-@test_approx_eq_eps norm(vec(u)'*vec(v))  norm(w'*x) 1e-13
+@test norm((vec(u))' * vec(v)) ≈ norm(w' * x) atol=1.0e-13
 
 # create corresponding tensor mesh
 h1 = Mr.h[1]*ones(n[1])
@@ -103,7 +103,7 @@ x = randn(length(m))
 u = randn(size(Dt))
 v = getSensMatVec(x,m,paramt)
 w = getSensTMatVec(vec(u),m,paramt)
-@test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
+@test norm((vec(u))' * vec(v)) ≈ norm(w' * x) atol=1.0e-13
 
 # Test explicit sensitivities
 println("Testing tensor mesh explicit sensitivities")
@@ -123,7 +123,7 @@ x = randn(length(m))
 u = randn(size(Dt))
 v = getSensMatVec(x,m,paramtSE)
 w = getSensTMatVec(vec(u),m,paramtSE)
-@test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
+@test norm((vec(u))' * vec(v)) ≈ norm(w' * x) atol=1.0e-13
 
 if hasJOcTree
   # Create corresponding OcTree mesh
@@ -157,7 +157,7 @@ if hasJOcTree
   u = randn(size(Dofv))
   v = getSensMatVec(x,m,paramofv)
   w = getSensTMatVec(vec(u),m,paramofv)
-  @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
+  @test norm((vec(u))' * vec(v)) ≈ norm(w' * x) atol=1.0e-13
   
   #Test explicit sensitivities
   println("Testing OcTree mesh FV explicit sensitivities")
@@ -177,6 +177,6 @@ if hasJOcTree
   u = randn(size(Dofv))
   v = getSensMatVec(x,m,paramofvSE)
   w = getSensTMatVec(vec(u),m,paramofvSE)
-  @test_approx_eq_eps norm(vec(u)'*vec(v)) norm(w'*x) 1e-13
+  @test norm((vec(u))' * vec(v)) ≈ norm(w' * x) atol=1.0e-13
 end
 end #End of mesh consistency test set

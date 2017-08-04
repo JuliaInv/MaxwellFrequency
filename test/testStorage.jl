@@ -51,7 +51,7 @@ y = rand(size(Obs, 2)*size(Sources, 2)) + im*rand(size(Obs, 2)*size(Sources, 2))
         @test param.Ainv.Ainv == []
 
         # Adjoint test
-        @test_approx_eq_eps real(y'*Jx) real(x'*Jty) 1e-14
+        @test real(y' * Jx) ≈ real(x' * Jty) atol=1.0e-14
 
     end
 
@@ -83,8 +83,7 @@ y = rand(size(Obs, 2)*size(Sources, 2)) + im*rand(size(Obs, 2)*size(Sources, 2))
         @test param.Ainv.Ainv == []
 
         # Adjoint test
-        @test_approx_eq_eps real(y'*Jx) real(x'*Jty) 1e-14
-
+        @test real(y' * Jx) ≈ real(x' * Jty) atol=1.0e-14
     end
 
     @testset "Factor Storage" begin
@@ -114,8 +113,7 @@ y = rand(size(Obs, 2)*size(Sources, 2)) + im*rand(size(Obs, 2)*size(Sources, 2))
         @test param.Ainv.Ainv != []
 
         # Adjoint test
-        @test_approx_eq_eps real(y'*Jx) real(x'*Jty) 1e-14
-
+        @test real(y' * Jx) ≈ real(x' * Jty) atol=1.0e-14
     end
 end
 
@@ -149,7 +147,7 @@ end
         @test param.Ainv.Ainv == []
 
         # Adjoint test
-        @test_approx_eq_eps real(y'*Jx) real(x'*Jty) 1e-14
+        @test real(y' * Jx) ≈ real(x' * Jty) atol=1.0e-14
 
     end
 
@@ -181,8 +179,7 @@ end
         @test param.Ainv.Ainv == []
 
         # Adjoint test
-        @test_approx_eq_eps real(y'*Jx) real(x'*Jty) 1e-14
-
+        @test real(y' * Jx) ≈ real(x' * Jty) atol=1.0e-14
     end
 
     @testset "Factor Storage" begin
@@ -212,7 +209,6 @@ end
         @test param.Ainv.Ainv != []
 
         # Adjoint test
-        @test_approx_eq_eps real(y'*Jx) real(x'*Jty) 1e-14
-
+        @test real(y' * Jx) ≈ real(x' * Jty) atol=1.0e-14
     end
 end
