@@ -1,64 +1,115 @@
+import jInv.ForwardShare.getData
 export getData
 
-# = ========= The forward problem ===========================
+"""
+function data, param = getData(sigma, param[, doClear=false])
 
-function getData(sigma,   # conductivity
-	              param::MaxwellFreqParam,
-	              doClear::Bool=false)
-	# Maxwell Forward problem
-	
-	doClearAll=false
+Computes the data observed by survey defined in param for conductivity model sigma
 
-	mu   = 4*pi*1e-7
-	w    = param.freq
-	S    = param.Sources
-	P    = param.Obs
-	
-	Curl = getCurlMatrix(param.Mesh)
-	
-	Msig = getEdgeMassMatrix(param.Mesh,vec(sigma))
-	Mmu  = getFaceMassMatrix(param.Mesh,fill(1/mu,length(sigma)))
+inputs:
 
-  # eliminate hanging edges and faces
-	Ne,   = getEdgeConstraints(param.Mesh)
-  Nf,Qf = getFaceConstraints(param.Mesh)
-  
-  Curl = Qf  * Curl * Ne
-  Msig = Ne' * Msig * Ne
-  Mmu  = Nf' * Mmu  * Nf
-   iw = complex(0., w)
+        sigma::Vector           - A conductivity model
+        param::MaxwellFreqParam - MaxwellFreqParam
+        doClear::Bool           - ???
 
-	A   = Curl' * Mmu * Curl - iw * Msig
-	rhs = iw * (Ne' * S)
-   Curl=[] ; Nf=[] ; Qf=[] ; Mmu=[]
-	
-	param.Ainv.doClear = 1
-   # Solve: A*U = rhs
-	U, param.Ainv = solveMaxFreq(A, rhs, Msig,
-	                             param.Mesh, w, param.Ainv,0)
-	param.Ainv.doClear = 0
-  
-	U = Ne * U
-	D = P' * U
-	
-	param.Fields = U
-	if doClear
-		# clear fields and factorization
-		clear!(param,clearAll=doClearAll)
-	end
-	
-	return D, param # data, MaxwellParam
-end # function getData
+output:
+        data:Array{Complex{Float64}} - Computed data
+        param::MaxwellFreqParam      - MaxwellFreqParam
 
-function getData(sigma::Array{Float64,1},param::MaxwellFreqParamSE,doClear::Bool=false)
-	tempParam = getMaxwellFreqParam(param.Mesh,param.Sources,param.Obs,[],param.freq, param.Ainv)
-	param.Sens=[]
-	D,tempParam = getData(sigma,tempParam)
-	ns = size(param.Sources,2)
-	nr = size(param.Obs,2)	
-	v      = zeros(ns*nr)
-	J    = getSensTMatVec(speye(ns*nr),sigma,tempParam)
-	param.Sens = J'
-	clear!(tempParam)	
+"""
+function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=false)
+
+    if param.sensitivityMethod == :Implicit
+
+        w = param.freq
+        S = param.Sources
+        P = param.Obs
+        Ne, = getEdgeConstraints(param.Mesh)
+
+        if param.storageLevel == :Matrices
+        # Initialize matrix storage if needed. Note that if a direct solver is
+        # being used and factorizatons are being stored, then matrices don't
+        # need to be stored
+            param.Matrices = Vector{SparseMatrixCSC}()
+        elseif param.storageLevel == :Factors
+        # Clear the solver
+            clear!(param.Ainv)
+        end
+
+        if use_iw
+           iw =  complex(0., w)
+        else
+           iw = -complex(0., w)
+        end
+
+        # A = getMaxwellFreqMatrix(sigma, param)
+
+        rhs = -iw * (Ne' * S)
+
+        param.Ainv.doClear = 1
+        U, param.Ainv = solveMaxFreq(rhs, sigma, param, 0)
+        param.Ainv.doClear = 0
+
+        U = Ne * U
+        D = P' * U
+
+        param.Fields = U
+        if doClear
+            # clear fields and factorization
+            clear!(param,clearAll=false)
+        end
+
+    elseif param.sensitivityMethod == :Explicit
+
+        tempParam = getMaxwellFreqParam(param.Mesh, param.Sources, param.Obs, [], param.freq, param.Ainv)
+        param.Sens=[]
+        D,tempParam = getData(sigma,tempParam)
+        J = getSensMat(sigma, tempParam)
+        param.Sens = J'
+        clear!(tempParam)
+
+    else
+        error("getData: Invalid sensitivity method")
+
+    end
+
 	return D, param
+end
+
+"""
+function data, param = getSensMat(sigma, param)
+
+Computes the data observed by survey defined in param for conductivity model sigma.
+Used by getData for when sensitivityMethod = :Explicit.
+
+inputs:
+
+        sigma::Vector           - A conductivity model
+        param::MaxwellFreqParam - MaxwellFreqParam
+
+output:
+        sensMat:Array{Complex{Float64}} - Sensitivity Matrix
+
+"""
+function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
+    x = eye(size(param.Sources,2)*size(param.Obs,2))
+    U = param.Fields
+    w = param.freq
+    P = param.Obs
+
+    Ne, = getEdgeConstraints(param.Mesh)
+
+    X = reshape(complex(x),size(P,2),size(U,2),size(x,2))
+    sensMat = zeros(Complex128,length(sigma),size(x,2))
+
+    for i=1:size(U,2)
+        Z = -Ne'*(P*X[:,i,:])
+        Z, = solveMaxFreq(Z,sigma,param,1)
+        u = U[:,i]
+        dAdm = getdEdgeMassMatrix(param.Mesh,u)
+        dAdm = -im*w*Ne'*dAdm
+        sensMat += (dAdm'*Z)
+    end
+
+    return sensMat
 end

@@ -1,82 +1,59 @@
+import jInv.ForwardShare.getSensTMatVec
 export getSensTMatVec
 
-# = ========= The Transpose sensitivity ===========================
+"""
+function matv = getSensTMatVec(x, sigma, param)
 
-function getSensTMatVec(x::Vector,
-                        sigma::Vector,
-                        param::MaxwellFreqParam)
-# SensT Mat Vec for FV disctretization on OcTree mesh
-  # mu   = 4*pi*1e-7
-   U    = param.Fields
-   w    = param.freq
-   P    = param.Obs
-  
-   # eliminate hanging edges and faces
-   Ne,   = getEdgeConstraints(param.Mesh)
+Multiplies the transposed sensitvity matrix by a vector
 
-   A = spzeros(1,1)    # not needed
-   Msig = spzeros(1,1) # not needed
+inputs:
+        x::Vector               - A vector
+        sigma::Vector{Float64}  - A conductivity model
+        param::MaxwellFreqParam - MaxwellFreqParam
 
-   X    = reshape(complex(x),size(P,2),size(U,2))
-   matv = zeros(size(sigma))
-  
-   for i=1:size(U,2)
-     # u     = U[:,i] 
-     # dAdm  = getdEdgeMassMatrix(param.Mesh,u)
-     # dAdm  = -im*w*Ne'*dAdm
-      z     = -Ne'*(P*X[:,i])
-      z,    = solveMaxFreq(A,z,Msig,param.Mesh,w,param.Ainv,1)  # Solve A'*z = z
+output:
+        matv:Array{Complex{Float64}}  - Solution (J.T*x)
 
-     # matv += real(  -(im*w)*dAdm' * (Ne*z) )
-      z     = Ne * vec(z)
-      dAdmTz  = DerivativeTrTimesVector(param.Mesh, U[:,i], z)
-      matv += w*imag(dAdmTz)  # real(  -(im*w)* dAdmTz )
-   end  # i
+"""
+function getSensTMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqParam)
 
-   return matv
-end  # function getSensTMatVec
+    if param.sensitivityMethod == :Implicit
+        U = param.Fields
+        w = param.freq
+        P = param.Obs
+        Ne, = getEdgeConstraints(param.Mesh)
 
+        if use_iw
+           iw =  complex(0., w)
+        else
+           iw = -complex(0., w)
+        end
 
-function getSensTMatVec(x::SparseMatrixCSC,sigma::Vector,param::MaxwellFreqParam)
-   # SensT Mat Vec for FV disctretization on OcTree mesh
-   x = full(x)
- #  mu   = 4*pi*1e-7
-   U    = param.Fields
-   w    = param.freq
-   P    = param.Obs
-   
-  
-  # eliminate hanging edges and faces
-   Ne,   = getEdgeConstraints(param.Mesh)
-  
-   A = spzeros(1,1)    # not needed
-   Msig = spzeros(1,1) # not needed
-   
-   X    = reshape(complex(x),size(P,2),size(U,2),size(x,2))
-   #matv = zeros(Complex128,length(sigma),size(P,2),size(U,2))
-   matv = zeros(Complex128,length(sigma),size(x,2))   
+        X    = reshape(complex(x), size(P,2), size(U,2))
+        matv = zeros(param.Mesh.nc)
 
-   for i=1:size(U,2)
-      if !all(X.==0)
-         
-         Z     = -Ne'*(P*squeeze(X[:,i,:],2))
-         Z,    = solveMaxFreq(A,Z,Msig,param.Mesh,w,param.Ainv,1)  # Solve A'*Z = Z
-         u     = U[:,i] 
-         dAdm  = getdEdgeMassMatrix(param.Mesh,u)
-         dAdm  = -(im*w)*(Ne'*dAdm)
-         #matv[:,:,i] = (dAdm'*Z)
-         matv +=  (dAdm'*Z)
-      end
-   end
-   #matv = reshape(matv,length(sigma),size(P,2)*size(U,2))
-   
-   return matv
-end
+        for i=1:size(U, 2)
+          #  u = U[:, i]
+          #  dAdm = getdEdgeMassMatrix(param.Mesh, u)
+          #  dAdm = -im*w*Ne'*dAdm
+            z = -Ne'*(P*X[:, i])
+            z, = solveMaxFreq(z, sigma, param, 1)  # Solve A'*z = z
+          #  z = vec(z)
+          #  matv += real(dAdm'*z)
+            z = Ne * vec(z)
+            dAdmTz  = DerivativeTrTimesVector(param.Mesh, sigma, U[:,i], z)
+            matv += real( iw * dAdmTz )
+        end  # i
 
-function getSensTMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParamSE)
-	if isempty(param.Sens)
-		warn("getSensTMatVec: Recomputing data to get sensitvity matrix. This should be avoided.")
-		Dc,param = getData(sigma,param)
-	end
-	return real(param.Sens'*x)
+    elseif param.sensitivityMethod == :Explicit
+        if isempty(param.Sens)
+            warn("getSensTMatVec: Recomputing data to get sensitvity matrix. This should be avoided.")
+            Dc, param = getData(sigma, param)
+        end
+        matv = real(param.Sens'*x)
+    else
+        error("getSensMatVec: Invalid sensitivity method")
+    end
+
+    return matv
 end

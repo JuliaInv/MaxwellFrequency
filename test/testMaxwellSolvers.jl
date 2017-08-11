@@ -6,34 +6,36 @@ using MUMPS
 using KrylovMethods
 
 omega = [0 200 0 200 0 200]
-n     = [16; 20; 32]
-Mr     = getRegularMesh(omega,n)
+n = [16; 20; 32]
+mesh = getRegularMesh(omega,n)
 
-sigma = rand(Mr.nc)*1e-1
-mu    = 4*pi*1e-7
-w     = 1.0*2*pi
+sigma = rand(mesh.nc)*1e-1
+w = 1.0*2*pi
 
 # get Maxwell system
-Curl = getCurlMatrix(Mr)
-Msig = getEdgeMassMatrix(Mr,vec(sigma))
-Mmu  = getFaceMassMatrix(Mr,vec(zeros(size(sigma)).+1/mu))
-A    = Curl'*Mmu*Curl + 1im*w*Msig
+A = getMaxwellFreqMatrix(sigma, w, mesh)
 
+# Build the rhs
+Curl = getCurlMatrix(mesh)
 rhs = randn(size(A,1)) + 1im*randn(size(A,1))
-#rhs = Curl'*(Curl*rhs)
+rhs = Curl'*(Curl*rhs)
 
 @testset "Solver tests" begin
 
+bicgstbIM(A,b;M=[],tol=1e-1,maxIter=10,out=-1) = bicgstb(A,b,M1=M,tol=tol,maxIter=maxIter,out=out)
+
 # get solver types
-solvers  = ( getMUMPSsolver(),getIterativeSolver(bicgstb))
-solvers[2].maxIter=1000
-xi = []
+solvers  = [ getJuliaSolver(), 
+             getMUMPSsolver(), 
+             getIterativeSolver(bicgstbIM, maxIter=1000, tol=1e-7) ]
+
 for s = solvers
-	print("   testing Maxwell solver for ", typeof(s), "...")
+	println("   testing Maxwell solver for ", typeof(s), "...")
 	tic()
-	xi, = solveMaxFreq(A,rhs,Msig,Mr,w,s)
+	xi, = solveMaxFreq(A,rhs,sigma, s)
 	solveTime = toq()
-	@test norm(A*xi-rhs)/norm(rhs) < 1e-7
-	print("passed in ",solveTime ," sec!\n")
+	@test norm(A*xi-rhs)/norm(rhs) < 1e-6
+	print("   passed in ",solveTime ," sec!\n")
 end
-end #End of solver test set
+
+end

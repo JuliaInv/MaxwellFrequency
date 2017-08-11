@@ -1,44 +1,58 @@
+import jInv.ForwardShare.getSensMatVec
 export getSensMatVec
 
-# = ========= The forward sensitivity ===========================
+"""
+function matv = getSensMatVec(x, sigma, param)
 
-function getSensMatVec(x::Vector,
-				   	     sigma::Vector,  # conductivity on fwd mesh
-					        param::MaxwellFreqParam)
-   # Sens Mat Vec for FV disctretization on OcTreeMesh
-   # matv = J*x
- #  mu   = 4*pi*1e-7
-   U    = param.Fields
-   w    = param.freq
-   P    = param.Obs
-   
-   # eliminate hanging edges and faces
-   Ne,   = getEdgeConstraints(param.Mesh)
-   iw = complex(0., w)
+Multiplies the sensitvity matrix by a vector
 
-   A = spzeros(1,1)    # not needed
-   Msig = spzeros(1,1) # not needed
-   
-   matv = zeros(Complex128,size(P,2),size(U,2))
+inputs:
+        x::Vector               - A vector
+        sigma::Vector{Float64}  - A conductivity model
+        param::MaxwellFreqParam - MaxwellFreqParam
 
-   for i=1:size(U,2)
-     # u = U[:,i] 
-     # dAdm    = getdEdgeMassMatrix(param.Mesh,u)
-      dAdmx    = DerivativeTimesVector(param.Mesh, U[:,i], x)
-     # z       = -(im*w) * Ne' * (dAdm*x)
-      z       = -iw * (Ne' * dAdmx)
-      z,      = solveMaxFreq(A,z,Msig,param.Mesh,w,param.Ainv,0)  # Solve A*z = z
-      z       = vec(Ne*z)
-      matv[:,i] = -P'*z 
-   end  # i
-   
-   return vec(matv)
-end # function getSensMatVec for FV OcTreeMesh
+output:
+        matv:Array{Complex{Float64}}  - Solution (J*x)
 
-function getSensMatVec(x::Vector,sigma::Vector,param::MaxwellFreqParamSE)
-	if isempty(param.Sens)
-		warn("getSensTMatVec: Recomputing data to get sensitvity matrix. This should be avoided.")
-		Dc,param = getData(sigma,param)
-	end
-	return param.Sens*x
+"""
+function getSensMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqParam)
+
+    if param.sensitivityMethod == :Implicit
+
+        U = param.Fields
+        w = param.freq
+        P = param.Obs
+        Ne, = getEdgeConstraints(param.Mesh)
+
+        if use_iw
+           iw =  complex(0., w)
+        else
+           iw = -complex(0., w)
+        end
+
+        matv = zeros(Complex128, size(P, 2), size(U, 2))
+
+        for i=1:size(U, 2)
+           # u = U[:, i]
+           # dAdm = getdEdgeMassMatrix(param.Mesh, u)
+            dAdmx  = DerivativeTimesVector(param.Mesh, sigma, U[:,i], x)
+           # z = -im*w*Ne'*dAdm*x
+            z = iw * (Ne' * dAdmx)
+            z, = solveMaxFreq(z, sigma, param, 0)
+            z = vec(Ne*z)
+            matv[:, i] = -P'*z
+        end
+
+    elseif param.sensitivityMethod == :Explicit
+
+        if isempty(param.Sens)
+            warn("getSensTMatVec: Recomputing data to get sensitvity matrix. This should be avoided.")
+            Dc,param = getData(sigma,param)
+        end
+        matv = param.Sens*x
+
+    else
+        error("getSensTMatVec: Invalid sensitivity method")
+    end
+    return vec(matv)
 end
