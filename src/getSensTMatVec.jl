@@ -23,7 +23,7 @@ function getSensTMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqPar
         P = param.Obs
         Ne, = getEdgeConstraints(param.Mesh)
 
-        if use_iw
+        if param.useIw
            iw =  complex(0., w)
         else
            iw = -complex(0., w)

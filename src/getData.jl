@@ -36,7 +36,7 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
             clear!(param.Ainv)
         end
 
-        if use_iw
+        if param.useIw
            iw =  complex(0., w)
         else
            iw = -complex(0., w)
@@ -61,7 +61,7 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
 
     elseif param.sensitivityMethod == :Explicit
 
-        tempParam = getMaxwellFreqParam(param.Mesh, param.Sources, param.Obs, [], param.freq, param.Ainv)
+        tempParam = getMaxwellFreqParam(param.Mesh, param.Sources, param.Obs, [], param.freq, param.useIw, param.Ainv)
         param.Sens=[]
         D,tempParam = getData(sigma,tempParam)
         J = getSensMat(sigma, tempParam)
@@ -102,12 +102,18 @@ function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
     X = reshape(complex(x),size(P,2),size(U,2),size(x,2))
     sensMat = zeros(Complex128,length(sigma),size(x,2))
 
+    if param.useIw
+      iw =  complex(0., w)
+    else
+      iw = -complex(0., w)
+    end
+
     for i=1:size(U,2)
         Z = -Ne'*(P*X[:,i,:])
         Z, = solveMaxFreq(Z,sigma,param,1)
         u = U[:,i]
         dAdm = getdEdgeMassMatrix(param.Mesh,u)
-        dAdm = -im*w*Ne'*dAdm
+        dAdm = iw*Ne'*dAdm
         sensMat += (dAdm'*Z)
     end
 

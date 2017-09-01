@@ -9,7 +9,8 @@ import jInv.ForwardShare.ForwardProbType
 
 
 const mu0 = 4*pi*1e-7
-const use_iw = false  # false # = true for i*omega, = false for -i*omega
+#export use_iw
+#const use_iw = true  # false # = true for i*omega, = false for -i*omega
 
 include("MaxwellFreqParam.jl")
 include("getData.jl")

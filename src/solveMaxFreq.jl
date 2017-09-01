@@ -38,6 +38,7 @@ function solveMaxFreq(A::SparseMatrixCSC,
                       Msig,
                       mesh::AbstractMesh,
                       w::Real,  # omega (=0 when called from solveMTsystem)
+                      useIw::Bool,  # = true for i*omega, = false for -i*omega
                       linSolParam::IterativeSolver,
                       doTranspose::Int=0)    # doTranspose=0 for solving Ax=rhs, =1 for A'x=rhs
 # A, Msig, M, and w are only needed when initializing (doClear).
@@ -63,14 +64,19 @@ function solveMaxFreq(A::SparseMatrixCSC,
          #muInvCells = Ane'*(Ace'*v)
          muInvCells = An2c' * (v/mu)
          Mmuinvn    = sdiag(muInvCells)
-         iw = complex(0., w)
+
+         if useIw
+           iw =  complex(0., w)
+         else
+           iw = -complex(0., w)
+         end
 
          #STBa = Grad*Mmuinvn*Grad'
          STBa = Grad * Nn' * Mmuinvn * Nn * Grad'
          Nn=[] ; Qn=[] ; Ne=[] ; Qe=[] ; An2c=[]
 
-         Aap = [ A + STBa         -iw*Msig*Grad ; 
-                -iw*Grad'*Msig    -iw*Grad'*Msig*Grad]
+         Aap = [ A + STBa        iw*Msig*Grad ; 
+                iw*Grad'*Msig    iw*Grad'*Msig*Grad]
 
          Map(x) = ssor(Aap,x,out=-1)[1]
 
