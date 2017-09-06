@@ -25,9 +25,9 @@ Fields:
     freq:Float64
         - angular frequency (includes 2*pi term)
     Ainv::AbstractSolver
-    sensitivityMethod::Symbol 
-        - Options are :Implicit, :Explicit. Default value is :Implicit. 
-    storageLevel::Symbol 
+    sensitivityMethod::Symbol
+        - Options are :Implicit, :Explicit. Default value is :Implicit.
+    storageLevel::Symbol
         - Options are :Factors, :Matrices, :None.
 """
 type MaxwellFreqParam <: ForwardProbType
@@ -43,12 +43,12 @@ type MaxwellFreqParam <: ForwardProbType
     storageLevel::Symbol
 end
 
-Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.Sens, P.Matrices, P.freq, P.Ainv, 
+Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.Sens, P.Matrices, P.freq, P.Ainv,
                                                   P.sensitivityMethod, P.storageLevel)
 
 """
 function getMaxwellFreqParam
-    
+
 constructor for MaxwellFreqParam
 
 Required Inputs
@@ -57,38 +57,34 @@ Required Inputs
     Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
     Obs::Union{Array{Complex128},SparseMatrixCSC}
         - transpose interpolation matrix from fields to receivers
-    Fields::Array{Complex128}
-        - solution to the fwd problem
     freq:Float64
         - angular frequency (includes 2*pi term)
     linSolParam::AbstractSolver
 
 Optional keyword arguments:
 
-    sensitivityMethod::Symbol 
-        - Options are :Implicit, :Explicit. Default value is :Implicit. 
-    storageLevel::Symbol 
+    Fields::Array{Complex128}
+        - solution to the fwd problem
+    sensitivityMethod::Symbol
+        - Options are :Implicit, :Explicit. Default value is :Implicit.
+    storageLevel::Symbol
         - Options are :Factors, :Matrices, :None.
 
 """
-function getMaxwellFreqParam(Mesh::AbstractMesh, 
-                             Sources, 
-                             Obs, 
-                             fields,
-                             freq, 
+function getMaxwellFreqParam(Mesh::AbstractMesh,
+                             Sources,
+                             Obs,
+                             freq,
                              linSolParam::AbstractSolver;
+                             fields::Array{Complex128}=Array{Complex128}(0,0),
                              sensitivityMethod::Symbol=:Implicit,
                              storageLevel::Symbol=:Factors)
-    
+
     # Check that user has chosen valid settings for categorical options
     in(sensitivityMethod,supportedSensitivityMethods) || error("Invalid sensitivity method")
     in(storageLevel,supportedStorageLevels) || error("Unknown storageLevel selection")
 
-    if isempty(fields)
-        fields = Array{Complex128}(0, 0)
-    end
-
-    return MaxwellFreqParam(Mesh, Sources, Obs, fields, 
+    return MaxwellFreqParam(Mesh, Sources, Obs, fields,
                             Array{Complex128}(0, 0), Array{SparseMatrixCSC}(0, 0),
                             freq, linSolParam, sensitivityMethod, storageLevel)
 end
