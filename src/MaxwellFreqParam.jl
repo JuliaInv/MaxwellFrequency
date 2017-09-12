@@ -29,6 +29,8 @@ Fields:
         - Options are :Implicit, :Explicit. Default value is :Implicit.
     storageLevel::Symbol
         - Options are :Factors, :Matrices, :None.
+    metaData::Dict{Any,Any}
+        - additional optional information
 """
 type MaxwellFreqParam <: ForwardProbType
     Mesh::AbstractMesh
@@ -41,10 +43,11 @@ type MaxwellFreqParam <: ForwardProbType
     Ainv::AbstractSolver
     sensitivityMethod::Symbol
     storageLevel::Symbol
+    metaData::Dict
 end
 
 Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.Sens, P.Matrices, P.freq, P.Ainv,
-                                                  P.sensitivityMethod, P.storageLevel)
+                                                  P.sensitivityMethod, P.storageLevel, P.metaData)
 
 """
 function getMaxwellFreqParam
@@ -78,7 +81,8 @@ function getMaxwellFreqParam(Mesh::AbstractMesh,
                              linSolParam::AbstractSolver;
                              fields::Array{Complex128}=Array{Complex128}(0,0),
                              sensitivityMethod::Symbol=:Implicit,
-                             storageLevel::Symbol=:Factors)
+                             storageLevel::Symbol=:Factors,
+                             metaData::Dict=Dict())
 
     # Check that user has chosen valid settings for categorical options
     in(sensitivityMethod,supportedSensitivityMethods) || error("Invalid sensitivity method")
@@ -86,5 +90,5 @@ function getMaxwellFreqParam(Mesh::AbstractMesh,
 
     return MaxwellFreqParam(Mesh, Sources, Obs, fields,
                             Array{Complex128}(0, 0), Array{SparseMatrixCSC}(0, 0),
-                            freq, linSolParam, sensitivityMethod, storageLevel)
+                            freq, linSolParam, sensitivityMethod, storageLevel, metaData)
 end
