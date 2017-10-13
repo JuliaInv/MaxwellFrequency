@@ -29,9 +29,8 @@ if hasJOcTree
         Sources = Ne * (Curl' * complex.(randn(size(Curl,1),2),randn(size(Curl,1),2)))
         Obs     = Ne * (Curl' * sprandn(size(Curl,1),2,0.001))
         freq    = 1e2
-        fields  = []
         Ainv    = getMUMPSsolver([],1)
-        param   = getMaxwellFreqParam(M,Sources,Obs,fields,freq,Ainv)
+        param   = getMaxwellFreqParam(M,Sources,Obs,freq,Ainv)
 
         # Isotropic conductivity
         m1 = exp.(randn(M.nc))

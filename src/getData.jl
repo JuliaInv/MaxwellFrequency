@@ -21,10 +21,11 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
 
     if param.sensitivityMethod == :Implicit
 
-        w = param.freq
         S = param.Sources
         P = param.Obs
         Ne, = getEdgeConstraints(param.Mesh)
+
+        iw = (param.timeConvention == :ExpMinusImOmegaT ? -im : im) * 2 * pi * param.frequency
 
         if param.storageLevel == :Matrices
         # Initialize matrix storage if needed. Note that if a direct solver is
@@ -37,7 +38,7 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
         end
 
         # A = getMaxwellFreqMatrix(sigma, param)
-        rhs = (im * w) * (Ne' * S)
+        rhs = -iw * (Ne' * S)
 
         param.Ainv.doClear = 1
         U, param.Ainv = solveMaxFreq(rhs, sigma, param, 0)
@@ -54,7 +55,8 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
 
     elseif param.sensitivityMethod == :Explicit
 
-        tempParam = getMaxwellFreqParam(param.Mesh, param.Sources, param.Obs, [], param.freq, param.Ainv)
+        tempParam = getMaxwellFreqParam(param.Mesh, param.Sources, param.Obs, param.frequency, param.Ainv,
+          sensitivityMethod = :Implicit, storageLevel = param.storageLevel, timeConvention = param.timeConvention)
         param.Sens=[]
         D,tempParam = getData(sigma,tempParam)
         J = getSensMat(sigma, tempParam)
@@ -87,10 +89,11 @@ output:
 function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
     x = eye(size(param.Sources,2)*size(param.Obs,2))
     U = param.Fields
-    w = param.freq
     P = param.Obs
 
     Ne, = getEdgeConstraints(param.Mesh)
+
+    iw = (param.timeConvention == :ExpMinusImOmegaT ? -im : im) * 2 * pi * param.frequency
 
     X = reshape(complex(x),size(P,2),size(U,2),size(x,2))
     sensMat = zeros(Complex128,length(sigma),size(x,2))
@@ -100,7 +103,7 @@ function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
         Z, = solveMaxFreq(Z,sigma,param,1)
         u = U[:,i]
         dAdm = getdEdgeMassMatrix(param.Mesh,sigma,u)
-        dAdm = -im*w*Ne'*dAdm
+        dAdm = iw*Ne'*dAdm
         sensMat += (dAdm'*Z)
     end
 

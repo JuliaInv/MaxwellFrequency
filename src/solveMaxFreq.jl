@@ -11,7 +11,7 @@ inputs:
       rhs::Array                  - Right hand side
       sigma::Vector{Float64}      - Conductivity model
       mesh::AbstractMesh          - The mesh
-      w::Real                     - The angular frequency being solved
+      f::Float64                  - The frequency
       linSolParam::AbstractSolver - Linear solver parameters
       doTranspose::Int=0          - Solve the transposed system
 
@@ -24,11 +24,10 @@ function solveMaxFreq(A::SparseMatrixCSC,
                       rhs::Union{Array,SparseMatrixCSC},
                       sigma::Vector{Float64},
                       mesh::AbstractMesh,
-                      w::Real,
+                      f::Float64,
                       linSolParam::AbstractSolver,
                       doTranspose::Int=0)
 
-    linSolParam.sym = 2 # structurally symmetric
     en, linSolParam = solveLinearSystem(A,rhs,linSolParam,doTranspose)
 
     return en, linSolParam
@@ -38,7 +37,7 @@ function solveMaxFreq(A::SparseMatrixCSC,
                       rhs::Union{Array,SparseMatrixCSC},
                       sigma::Vector{Float64},
                       mesh::AbstractMesh,
-                      w::Real,
+                      f::Float64,
                       linSolParam::IterativeSolver,
                       doTranspose::Int=0)
 
@@ -51,9 +50,11 @@ function solveMaxFreq(A::SparseMatrixCSC,
         MsigE = getEdgeMassMatrix(mesh, sigma)
         MsigE = Ne' * MsigE * Ne
 
+        iw = (param.timeConvention == :ExpMinusImOmegaT ? -im : im) * 2 * pi * f
+
         STBa = Grad*MmuN*Grad'
-        Aap = [A + STBa          -(im*w)*MsigE*Grad;
-             -(im*w)*Grad'*MsigE  -(im*w)*Grad'*MsigE*Grad]
+        Aap = [A + STBa         iw*MsigE*Grad
+               iw*Grad'*MsigE   iw*Grad'*MsigE*Grad]
 
         Map(x) = ssor(Aap,x,out=-1)[1]
         P  = [speye(size(A,2)); Grad']
@@ -63,7 +64,6 @@ function solveMaxFreq(A::SparseMatrixCSC,
         linSolParam.doClear = 0
     end
 
-    linSolParam.sym = 2 # structurally symmetric
     en, linSolParam = solveLinearSystem(A,rhs,linSolParam,doTranspose)
 
     return en, linSolParam
@@ -92,7 +92,7 @@ function solveMaxFreq(rhs::Union{Array,SparseMatrixCSC},
         A = getMaxwellFreqMatrix(sigma, param)
     end
 
-    en, param.Ainv = solveMaxFreq(A,rhs,sigma,param.Mesh,param.freq,param.Ainv,doTranspose)
+    en, param.Ainv = solveMaxFreq(A,rhs,sigma,param.Mesh,param.frequency,param.Ainv,doTranspose)
     if (param.storageLevel != :Factors) & ~isa(param.Ainv, IterativeSolver)
         clear!(param.Ainv)
     end

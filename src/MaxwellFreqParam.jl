@@ -4,6 +4,7 @@ export MaxwellFreqParam, getMaxwellFreqParam
 # Supported options for various settings
 supportedSensitivityMethods = [:Implicit; :Explicit]
 supportedStorageLevels      = [:Factors; :Matrices; :None]
+supportedTimeConventions    = [:ExpMinusImOmegaT, :ExpPlusImOmegaT]
 
 """
 type MaxwellFrequency.MaxwellFreqParam <: ForwardProbType
@@ -17,18 +18,20 @@ Fields:
     Obs::Union{Array{Complex128},SparseMatrixCSC}
         - transpose interpolation matrix from fields to receivers
     Fields::Array{Complex128}
-        - solution to the fwd problem
+        - solution to the forward problem
     Sens::Array{Complex128}
         - field for storage of explicit sensitivities (if required)
     Matrices::Array{SparseMatrixCSC}
         - field for storing system matrix
-    freq:Float64
-        - angular frequency (includes 2*pi term)
+    frequency:Float64
+        - frequency
     Ainv::AbstractSolver
     sensitivityMethod::Symbol
-        - Options are :Implicit, :Explicit. Default value is :Implicit.
+        - Options are :Implicit, :Explicit. Default value is :Implicit
     storageLevel::Symbol
-        - Options are :Factors, :Matrices, :None.
+        - Options are :Factors, :Matrices, :None
+    timeConvention::Symbol
+        - Options are :ExpMinusImOmegaT, :ExpPlusImOmegaT
     metaData::Dict{Any,Any}
         - additional optional information
 """
@@ -39,15 +42,16 @@ type MaxwellFreqParam <: ForwardProbType
     Fields::Array{Complex128}
     Sens::Array{Complex128}
     Matrices::Array{SparseMatrixCSC}
-    freq::Float64
+    frequency::Float64
     Ainv::AbstractSolver
     sensitivityMethod::Symbol
     storageLevel::Symbol
+    timeConvention::Symbol
     metaData::Dict
 end
 
-Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.Sens, P.Matrices, P.freq, P.Ainv,
-                                                  P.sensitivityMethod, P.storageLevel, P.metaData)
+Base.copy(P::MaxwellFreqParam) = MaxwellFreqParam(P.M, P.Sources, P.Obs, P.Fields, P.Sens, P.Matrices, P.frequency, P.Ainv,
+                                                  P.sensitivityMethod, P.storageLevel, P.timeConvention, P.metaData)
 
 """
 function getMaxwellFreqParam
@@ -60,35 +64,41 @@ Required Inputs
     Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
     Obs::Union{Array{Complex128},SparseMatrixCSC}
         - transpose interpolation matrix from fields to receivers
-    freq:Float64
-        - angular frequency (includes 2*pi term)
+    frequency:Float64
+        - frequency
     linSolParam::AbstractSolver
 
 Optional keyword arguments:
 
     Fields::Array{Complex128}
-        - solution to the fwd problem
+        - solution to the forward problem
     sensitivityMethod::Symbol
-        - Options are :Implicit, :Explicit. Default value is :Implicit.
+        - Options are :Implicit, :Explicit. Default value is :Implicit
     storageLevel::Symbol
-        - Options are :Factors, :Matrices, :None.
+        - Options are :Factors, :Matrices, :None
+    timeConvention::Symbol
+        - Options are :ExpMinusImOmegaT, :ExpPlusImOmegaT
 
 """
 function getMaxwellFreqParam(Mesh::AbstractMesh,
-                             Sources,
-                             Obs,
-                             freq,
+                             Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC},
+                             Obs::Union{Array{Complex128},SparseMatrixCSC},
+                             frequency::Float64,
                              linSolParam::AbstractSolver;
-                             fields::Array{Complex128}=Array{Complex128}(0,0),
+                             Fields::Array{Complex128}=Array{Complex128}(0,0),
                              sensitivityMethod::Symbol=:Implicit,
                              storageLevel::Symbol=:Factors,
+                             timeConvention::Symbol=:ExpMinusImOmegaT,
                              metaData::Dict=Dict())
 
     # Check that user has chosen valid settings for categorical options
     in(sensitivityMethod,supportedSensitivityMethods) || error("Invalid sensitivity method")
     in(storageLevel,supportedStorageLevels) || error("Unknown storageLevel selection")
+    in(timeConvention,supportedTimeConventions) || error("Unknown timeConvention selection")
 
-    return MaxwellFreqParam(Mesh, Sources, Obs, fields,
-                            Array{Complex128}(0, 0), Array{SparseMatrixCSC}(0, 0),
-                            freq, linSolParam, sensitivityMethod, storageLevel, metaData)
+    Sens = Array{Complex128}(0,0)
+    Matrices = Array{SparseMatrixCSC}(0)
+
+    return MaxwellFreqParam(Mesh, Sources, Obs, Fields, Sens, Matrices, frequency, linSolParam,
+                            sensitivityMethod, storageLevel, timeConvention, metaData)
 end

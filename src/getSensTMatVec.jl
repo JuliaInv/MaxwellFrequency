@@ -19,9 +19,10 @@ function getSensTMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqPar
 
     if param.sensitivityMethod == :Implicit
         U = param.Fields
-        w = param.freq
         P = param.Obs
         Ne, = getEdgeConstraints(param.Mesh)
+
+        iw = (param.timeConvention == :ExpMinusImOmegaT ? -im : im) * 2 * pi * param.frequency
 
         X    = reshape(complex(x), size(P,2), size(U,2))
         matv = zeros(size(sigma))
@@ -29,7 +30,7 @@ function getSensTMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqPar
         for i=1:size(U, 2)
             u = U[:, i]
             dAdm = getdEdgeMassMatrix(param.Mesh, sigma, u)
-            dAdm = -im*w*Ne'*dAdm
+            dAdm = iw*Ne'*dAdm
             z = -Ne'*(P*X[:, i])
             z, = solveMaxFreq(z, sigma, param, 1)
             z = vec(z)
