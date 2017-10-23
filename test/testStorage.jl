@@ -25,7 +25,7 @@ y = rand(size(Obs, 2)*size(Sources, 2)) + im*rand(size(Obs, 2)*size(Sources, 2))
     storageLevel = :Implicit
     @testset "No Storage" begin
 
-        param = getMaxwellFreqParam(mesh, Sources, Obs, [], 100., solver)
+        param = getMaxwellFreqParam(mesh, Sources, Obs, 100., solver)
         param.sensitivityMethod = storageLevel
         param.storageLevel = :None
 
@@ -57,7 +57,7 @@ y = rand(size(Obs, 2)*size(Sources, 2)) + im*rand(size(Obs, 2)*size(Sources, 2))
 
     @testset "Matrix Storage" begin
 
-        param = getMaxwellFreqParam(mesh, Sources, Obs, [], 100., solver)
+        param = getMaxwellFreqParam(mesh, Sources, Obs, 100., solver)
         param.sensitivityMethod = :Implicit
         param.storageLevel = :Matrices
 
@@ -88,7 +88,7 @@ y = rand(size(Obs, 2)*size(Sources, 2)) + im*rand(size(Obs, 2)*size(Sources, 2))
 
     @testset "Factor Storage" begin
 
-        param = getMaxwellFreqParam(mesh, Sources, Obs, [], 100., solver)
+        param = getMaxwellFreqParam(mesh, Sources, Obs, 100., solver)
         param.storageLevel=:Factors
 
         D, param = getData(sigma, param)
@@ -121,7 +121,7 @@ end
     storageLevel = :Explicit
     @testset "No Storage" begin
 
-        param = getMaxwellFreqParam(mesh, Sources, Obs, [], 100., solver)
+        param = getMaxwellFreqParam(mesh, Sources, Obs, 100., solver)
         param.sensitivityMethod = storageLevel
         param.storageLevel = :None
 
@@ -153,7 +153,7 @@ end
 
     @testset "Matrix Storage" begin
 
-        param = getMaxwellFreqParam(mesh, Sources, Obs, [], 100., solver)
+        param = getMaxwellFreqParam(mesh, Sources, Obs, 100., solver)
         param.sensitivityMethod = :Implicit
         param.storageLevel = :Matrices
 
@@ -184,7 +184,7 @@ end
 
     @testset "Factor Storage" begin
 
-        param = getMaxwellFreqParam(mesh, Sources, Obs, [], 100., solver)
+        param = getMaxwellFreqParam(mesh, Sources, Obs, 100., solver)
         param.storageLevel=:Factors
 
         D, param = getData(sigma, param)

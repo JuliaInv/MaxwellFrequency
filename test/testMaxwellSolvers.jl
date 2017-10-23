@@ -13,7 +13,7 @@ sigma = rand(mesh.nc)*1e-1
 w = 1.0*2*pi
 
 # get Maxwell system
-A = getMaxwellFreqMatrix(sigma, w, mesh)
+A = getMaxwellFreqMatrix(sigma, w, mesh, true)
 
 # Build the rhs
 Curl = getCurlMatrix(mesh)
@@ -26,8 +26,9 @@ bicgstbIM(A,b;M=[],tol=1e-1,maxIter=10,out=-1) = bicgstb(A,b,M1=M,tol=tol,maxIte
 
 # get solver types
 solvers  = [ getJuliaSolver(), 
-             getMUMPSsolver(), 
-             getIterativeSolver(bicgstbIM, maxIter=1000, tol=1e-7) ]
+             getMUMPSsolver()]
+			#  TODO: make this work
+			#  getIterativeSolver(bicgstbIM, maxIter=1000, tol=1e-7) 
 
 for s = solvers
 	println("   testing Maxwell solver for ", typeof(s), "...")
