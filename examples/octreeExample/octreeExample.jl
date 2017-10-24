@@ -80,7 +80,7 @@ nw         = length(workerList)
 for i = 1:nFreqs
     fields = Array{Complex128}(0, 0)
     pFor[i] = initRemoteChannel(getMaxwellFreqParam,workerList[i%nw+1],
-                                mesh,Sources,Obs[i],fields,frq[i],solver)
+                                mesh,Sources,Obs[i],frq[i],solver)
 end
 
 # Generate synthetic data
