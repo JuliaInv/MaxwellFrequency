@@ -31,7 +31,7 @@ function getSensTMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqPar
             u = U[:, i]
             dAdm = getdEdgeMassMatrix(param.Mesh, sigma, u)
             dAdm = iw*Ne'*dAdm
-            z = -Ne'*(P*X[:, i])
+            z = -Ne'*(conj(P)*X[:, i])
             z, = solveMaxFreq(z, sigma, param, 1)
             z = vec(z)
             matv += real(dAdm'*z)

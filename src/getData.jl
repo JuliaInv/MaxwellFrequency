@@ -45,7 +45,7 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
         param.Ainv.doClear = 0
 
         U = Ne * U
-        D = P' * U
+        D = P.' * U
 
         param.Fields = U
         if doClear
@@ -99,7 +99,7 @@ function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
     sensMat = zeros(Complex128,length(sigma),size(x,2))
 
     for i=1:size(U,2)
-        Z = -Ne'*(P*X[:,i,:])
+        Z = -Ne'*(conj(P)*X[:,i,:])
         Z, = solveMaxFreq(Z,sigma,param,1)
         u = U[:,i]
         dAdm = getdEdgeMassMatrix(param.Mesh,sigma,u)

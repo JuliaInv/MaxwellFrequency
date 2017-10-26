@@ -27,7 +27,7 @@ if hasJOcTree
         Nf,Qf   = getFaceConstraints(M)
         Curl    = Qf * Curl * Ne
         Sources = Ne * (Curl' * complex.(randn(size(Curl,1),2),randn(size(Curl,1),2)))
-        Obs     = Ne * (Curl' * sprandn(size(Curl,1),2,0.001))
+        Obs     = Ne * (Curl' * complex.(sprandn(size(Curl,1),2,0.001),sprandn(size(Curl,1),2,0.001)))
         freq    = 1e2
         Ainv    = getMUMPSsolver([],1)
         param   = getMaxwellFreqParam(M,Sources,Obs,freq,Ainv)

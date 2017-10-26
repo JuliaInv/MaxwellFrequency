@@ -33,7 +33,7 @@ function getSensMatVec(x::Vector, sigma::Vector{Float64}, param::MaxwellFreqPara
             z = iw*Ne'*dAdm*x
             z, = solveMaxFreq(z, sigma, param, 0)
             z = vec(Ne*z)
-            matv[:, i] = -P'*z
+            matv[:, i] = -P.'*z
         end
 
     elseif param.sensitivityMethod == :Explicit
