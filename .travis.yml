@@ -1,0 +1,21 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
+language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 0.6
+notifications:
+  email: false
+
+before_install:
+  - julia -e 'Pkg.clone("https://github.com/JuliaInv/jInv.jl","jInv");
+              Pkg.build("jInv");
+              Pkg.clone("https://github.com/JuliaInv/JOcTree.git")'
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+
+script:
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("MaxwellFrequency"); Pkg.test("MaxwellFrequency"; coverage=true)'
+
+# after_success:
+#   - julia -e 'cd(Pkg.dir("MaxwellFrequency")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
