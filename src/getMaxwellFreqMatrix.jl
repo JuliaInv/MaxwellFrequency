@@ -3,13 +3,13 @@ export getMaxwellFreqMatrix
 """
 function MaxwellFreq.getMaxwellFreqMatrix
 
-builds finite volume discretization of the Maxweel Frequency domain operator
+builds finite volume discretization of the Maxwell Frequency domain operator
 
-    A = Curl * mu0 * Curl ± im * 2 * pi * f * sigma(x)
+    A = Curl * mu * Curl ± im * 2 * pi * f * sigma(x)
 
 Inputs:
 
-    sigma::Vector{Float64} - conductivities (cell-centered)
+    m::MaxwellFreqModel - conductivities (cell-centered)
     f::Float64             - frequency
     mesh::AbstractMesh     - mesh from jInv.Mesh
 
@@ -18,12 +18,15 @@ Output:
     A  - PDE operator (sparse matrix)
 
 """
-function getMaxwellFreqMatrix(sigma::Vector{Float64}, f::Float64,  mesh::AbstractMesh, minusIOmega::Bool)
+function getMaxwellFreqMatrix(m::MaxwellFreqModel, f::Float64,  mesh::AbstractMesh, minusIOmega::Bool)
+
+    sigma = m.values["sigmaCell"]
+    muInv = haskey(m.values,"muCell") ? 1./m.values["muCell"] : fill(1./mu0, mesh.nc)
 
     Curl = getCurlMatrix(mesh)
 
     Msig = getEdgeMassMatrix(mesh, sigma)
-    Mmu  = getFaceMassMatrix(mesh, fill(1/mu0, mesh.nc))
+    Mmu  = getFaceMassMatrix(mesh, muInv)
 
     # eliminate hanging edges and faces
     Ne, = getEdgeConstraints(mesh)
@@ -40,7 +43,7 @@ function getMaxwellFreqMatrix(sigma::Vector{Float64}, f::Float64,  mesh::Abstrac
     return A
 end
 
-function getMaxwellFreqMatrix(sigma::Vector{Float64}, pFor::MaxwellFreqParam, doClear::Bool=true)
-    A = getMaxwellFreqMatrix(sigma, pFor.frequency, pFor.Mesh, pFor.timeConvention == :ExpMinusImOmegaT)
+function getMaxwellFreqMatrix(m::MaxwellFreqModel, pFor::MaxwellFreqParam, doClear::Bool=true)
+    A = getMaxwellFreqMatrix(m, pFor.frequency, pFor.Mesh, pFor.timeConvention == :ExpMinusImOmegaT)
     return A
 end

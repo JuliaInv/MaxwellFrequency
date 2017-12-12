@@ -2,15 +2,15 @@ import jInv.ForwardShare.getData
 export getData
 
 """
-function data, param = getData(sigma, param[, doClear=false])
+function data, param = getData(m, param[, doClear=false])
 
-Computes the data observed by survey defined in param for conductivity model sigma
+Computes the data observed by survey defined in param for model m
 
 inputs:
 
-        sigma::Vector           - A conductivity model
-        param::MaxwellFreqParam - MaxwellFreqParam
-        doClear::Bool           - ???
+        m::Vector or MaxwellFreqModel - A conductivity model
+        param::MaxwellFreqParam           - MaxwellFreqParam
+        doClear::Bool                     - ???
 
 output:
         data:Array{Complex{Float64}} - Computed data
@@ -18,6 +18,13 @@ output:
 
 """
 function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=false)
+    values = Dict{String,Vector{Float64}}("sigmaCell"=>sigma,"muCell"=>fill(mu0,param.Mesh.nc))
+    activeInversionProperties = ["sigmaCell"]
+    m = MaxwellFreqModel(values,activeInversionProperties)
+    getData(m,param,doClear)
+end
+
+function getData(m::MaxwellFreqModel, param::MaxwellFreqParam, doClear::Bool=false)
 
     if param.sensitivityMethod == :Implicit
 
@@ -38,14 +45,26 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
         end
 
         # A = getMaxwellFreqMatrix(sigma, param)
-        rhs = -iw * (Ne' * S)
+        if size(S,1) == size(Ne,1)
+            rhs = -iw * (Ne' * S)
+        elseif size(S,1) == size(Ne,2)
+            rhs = -iw * S
+        else
+            error("Invalid source term")
+        end
 
         param.Ainv.doClear = 1
-        U, param.Ainv = solveMaxFreq(rhs, sigma, param, 0)
+        U, param.Ainv = solveMaxFreq(rhs, m, param, 0)
         param.Ainv.doClear = 0
-
-        U = Ne * U
-        D = P.' * U
+        if size(P,1) == size(Ne,2) # if P = Ne'*P, then P' = P'*Ne
+            D = P.' * U
+            U = Ne * U
+        elseif size(P,1) == size(Ne,1)
+            U = Ne * U
+            D = P.' * U
+        else
+            error("Invalid size of P")
+        end
 
         param.Fields = U
         if doClear
@@ -58,8 +77,8 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
         tempParam = getMaxwellFreqParam(param.Mesh, param.Sources, param.Obs, param.frequency, param.Ainv,
           sensitivityMethod = :Implicit, storageLevel = param.storageLevel, timeConvention = param.timeConvention)
         param.Sens=[]
-        D,tempParam = getData(sigma,tempParam)
-        J = getSensMat(sigma, tempParam)
+        D,tempParam = getData(m,tempParam)
+        J = getSensMat(m, tempParam)
         param.Sens = J'
         clear!(tempParam)
 
@@ -72,21 +91,23 @@ function getData(sigma::Vector{Float64}, param::MaxwellFreqParam, doClear::Bool=
 end
 
 """
-function data, param = getSensMat(sigma, param)
+function data, param = getSensMat(m, param)
 
-Computes the data observed by survey defined in param for conductivity model sigma.
-Used by getData for when sensitivityMethod = :Explicit.
+Computes the data observed by survey defined in param for MaxwellFreqModelmodel
+m. Used by getData for when sensitivityMethod = :Explicit.
 
 inputs:
 
-        sigma::Vector           - A conductivity model
+        m::MaxwellFreqModel     - A conductivity and susceptibility model
         param::MaxwellFreqParam - MaxwellFreqParam
 
 output:
         sensMat:Array{Complex{Float64}} - Sensitivity Matrix
 
 """
-function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
+function getSensMat(m::MaxwellFreqModel, param::MaxwellFreqParam)
+    @assert m.activeInversionProperties == ["sigmaCell"] "Explicit sensitivities only supported for cell conductivity inversions"
+    sigma = m.values["sigmaCell"]
     x = eye(size(param.Sources,2)*size(param.Obs,2))
     U = param.Fields
     P = param.Obs
@@ -100,7 +121,7 @@ function getSensMat(sigma::Vector{Float64}, param::MaxwellFreqParam)
 
     for i=1:size(U,2)
         Z = -Ne'*(conj(P)*X[:,i,:])
-        Z, = solveMaxFreq(Z,sigma,param,1)
+        Z, = solveMaxFreq(Z,m,param,1)
         u = U[:,i]
         dAdm = getdEdgeMassMatrix(param.Mesh,sigma,u)
         dAdm = iw*Ne'*dAdm
