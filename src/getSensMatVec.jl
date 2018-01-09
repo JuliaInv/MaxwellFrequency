@@ -28,6 +28,12 @@ end
 
 function getSensMatVec(x::MaxwellFreqModel, m::MaxwellFreqModel, param::MaxwellFreqParam)
 
+    # Recompute fields if necessary
+    if isempty(param.Fields)
+        dDummy,param = getData(m,param)
+    end
+
+
     Mesh = param.Mesh
     sigma = m.values["sigmaCell"]
     mu    = m.values["muCell"]
