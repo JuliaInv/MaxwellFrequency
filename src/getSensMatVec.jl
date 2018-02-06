@@ -76,7 +76,7 @@ function getSensMatVec(x::MaxwellFreqModel, m::MaxwellFreqModel, param::MaxwellF
             end
             if invertMu
                 NfCurlu     = Nf*(Curl*u)
-                dMmuinvdmx  = dFaceMassMatrixTimesVector(Mesh, sigma, NfCurlu,
+                dMmuinvdmx  = dFaceMassMatrixTimesVector(Mesh, mu, NfCurlu,
                                                          DmuinvDmu*DmuDmx)
                 z          += Ne'*(Curl'*(Nf'*dMmuinvdmx))
             end
