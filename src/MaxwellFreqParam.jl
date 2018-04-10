@@ -15,7 +15,7 @@ Fields:
 
     Mesh::AbstractMesh
     Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
-    Obs::Union{Array{Complex128},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
         - transpose interpolation matrix from fields to receivers
     Fields::Array{Complex128}
         - solution to the forward problem
@@ -38,7 +38,7 @@ Fields:
 type MaxwellFreqParam <: ForwardProbType
     Mesh::AbstractMesh
     Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
-    Obs::Union{Array{Complex128},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
     Fields::Array{Complex128}
     Sens::Array{Complex128}
     Matrices::Array{SparseMatrixCSC}
@@ -62,7 +62,7 @@ Required Inputs
 
     Mesh::AbstractMesh
     Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
-    Obs::Union{Array{Complex128},SparseMatrixCSC}
+    Obs::Union{Array{Complex128},Array{Float64},SparseMatrixCSC}
         - transpose interpolation matrix from fields to receivers
     frequency:Float64
         - frequency
@@ -82,7 +82,7 @@ Optional keyword arguments:
 """
 function getMaxwellFreqParam(Mesh::AbstractMesh,
                              Sources::Union{Array{Complex128},Array{Float64},SparseMatrixCSC},
-                             Obs::Union{Array{Complex128},SparseMatrixCSC},
+                             Obs::Union{Array{Complex128},Array{Float64},SparseMatrixCSC},
                              frequency::Float64,
                              linSolParam::AbstractSolver;
                              Fields::Array{Complex128}=Array{Complex128}(0,0),
