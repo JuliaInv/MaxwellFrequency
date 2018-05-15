@@ -102,3 +102,12 @@ function getMaxwellFreqParam(Mesh::AbstractMesh,
     return MaxwellFreqParam(Mesh, Sources, Obs, Fields, Sens, Matrices, frequency, linSolParam,
                             sensitivityMethod, storageLevel, timeConvention, metaData)
 end
+
+import Base.clear!
+function clear!(param::MaxwellFreqParam)
+    param.Fields = Array{Complex128}(0,0)
+    param.Sens = Array{Complex128}(0,0)
+    param.Matrices = Array{SparseMatrixCSC}(0)
+    clear!(param.Ainv)
+    return param
+end
