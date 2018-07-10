@@ -42,8 +42,7 @@ function MaxwellFreqModel()
 end
 
 function MaxwellFreqModel{T<:Real}(sigma::Vector{T})
-    return MaxwellFreqModel(Dict{String,AbstractArray}("sigmaCell"=>sigma),
-                            ["sigmaCell"])
+    return MaxwellFreqModel(Dict("sigmaCell"=>sigma),["sigmaCell"])
 end
 
 import Base.isempty
