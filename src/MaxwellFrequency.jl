@@ -14,6 +14,7 @@ export mu0
 include("MaxwellFreqParam.jl")
 include("MaxwellFreqModel.jl")
 include("getData.jl")
+include("getSensMat.jl")
 include("getSensMatVec.jl")
 include("getSensTMatVec.jl")
 include("solveMaxFreq.jl")
